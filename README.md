@@ -29,16 +29,37 @@ authentication, authorisation and a reverse proxy in front of [`order-service`](
 
 Deactivating a user, a scope or a client takes effect immediately.
 
-**Administration API** (`/api/admin`) — each area has its own permission, so duties can be split:
+**Administration API** (`/api/admin`) — every action has its own permission, so duties can be split. The `admin` role holds all of them.
 
 | Area | Permission | Endpoints |
 |---|---|---|
-| Services, routes | `services.manage` | CRUD `services`, `POST services/{id}/import-routes`, `GET routes` |
-| Roles, permissions, user roles | `access.manage` | CRUD `roles`, CRUD `permissions`, `PUT users/{id}/roles` |
-| Scopes | `scopes.manage` | CRUD `scopes`, `PUT/DELETE scopes/{id}/services/{serviceId}`, `PUT/DELETE scopes/{id}/routes/{routeId}` |
-| OAuth clients | `clients.manage` | list/create/revoke `clients`, `PUT clients/{id}/scopes` |
+| Services | `services.view` | GET `services`, GET `services/{id}` |
+|  | `services.create` | POST `services` |
+|  | `services.update` | PUT/PATCH `services/{id}` |
+|  | `services.delete` | DELETE `services/{id}` |
+|  | `services.import-routes` | POST `services/{id}/import-routes` |
+| Routes | `routes.view` | GET `routes` |
+| Roles | `roles.view` | GET `roles`, GET `roles/{id}` |
+|  | `roles.create` | POST `roles` |
+|  | `roles.update` | PUT/PATCH `roles/{id}` |
+|  | `roles.delete` | DELETE `roles/{id}` |
+| Permissions | `permissions.view` | GET `permissions`, GET `permissions/{id}` |
+|  | `permissions.create` | POST `permissions` |
+|  | `permissions.update` | PUT/PATCH `permissions/{id}` |
+|  | `permissions.delete` | DELETE `permissions/{id}` |
+| Users | `users.assign-roles` | PUT `users/{id}/roles` |
+| Scopes | `scopes.view` | GET `scopes`, GET `scopes/{id}` |
+|  | `scopes.create` | POST `scopes` |
+|  | `scopes.update` | PUT/PATCH `scopes/{id}` |
+|  | `scopes.delete` | DELETE `scopes/{id}` |
+|  | `scopes.bind` | PUT `scopes/{id}/services/{serviceId}`, PUT `scopes/{id}/routes/{routeId}` |
+|  | `scopes.unbind` | DELETE of the same two |
+| OAuth clients | `clients.view` | GET `clients`, GET `clients/{id}` |
+|  | `clients.create` | POST `clients` (with `scope_ids` also needs `clients.assign-scopes`) |
+|  | `clients.assign-scopes` | PUT `clients/{id}/scopes` |
+|  | `clients.revoke` | DELETE `clients/{id}` |
 
-Safety rules: system roles and permissions cannot be renamed or deleted, the `admin` role keeps all system permissions, the last active administrator cannot lose the role, the client in use cannot revoke itself, re-importing routes keeps their scope bindings. `access.manage` can grant any role and is therefore equivalent to full administration.
+Safety rules: system roles and permissions cannot be renamed or deleted, the `admin` role keeps all system permissions, the last active administrator cannot lose the role, the client in use cannot revoke itself, re-importing routes keeps their scope bindings. `roles.update` and `users.assign-roles` let their holder obtain any permission, so grant them as carefully as the `admin` role.
 
 **Gateway**
 
@@ -151,7 +172,7 @@ API-шлюз небольшой микросервисной платформы 
 
 **Авторизация — две независимые проверки.** Пользователь: роли и права (spatie), маршрут может требовать `x-permission`. Приложение: **скоупы** OAuth-клиента — приватный маршрут доступен, только если активный скоуп клиента покрывает весь сервис (включая новые маршруты) или конкретный маршрут; токен можно сузить параметром `scope`; по умолчанию доступ закрыт.
 
-**Админ-API** (`/api/admin`): сервисы и маршруты (`services.manage`), роли, права и роли пользователей (`access.manage`), скоупы и привязки (`scopes.manage`), OAuth-клиенты (`clients.manage`). Защиты: системные роли и права нельзя удалить или переименовать, роль `admin` сохраняет все системные права, последний администратор не может лишиться роли, нельзя отозвать клиента, через которого вошёл, повторный импорт маршрутов сохраняет привязки к скоупам. `access.manage` позволяет выдать любую роль, то есть равен полному администрированию.
+**Админ-API** (`/api/admin`): сервисы и маршруты, роли, права, роли пользователей, скоупы с привязками, OAuth-клиенты. На каждое действие — отдельное право (`services.view`, `services.create`, `roles.update`, `scopes.bind`, `clients.revoke` и т. д., полный список в таблице выше); роль `admin` имеет все. Создать клиента сразу со скоупами можно только с правом `clients.assign-scopes`. Защиты: системные роли и права нельзя удалить или переименовать, роль `admin` сохраняет все системные права, последний администратор не может лишиться роли, нельзя отозвать клиента, через которого вошёл, повторный импорт маршрутов сохраняет привязки к скоупам. `roles.update` и `users.assign-roles` позволяют получить любое право, поэтому выдавать их нужно так же осторожно, как роль `admin`.
 
 **Шлюз:** реестр микросервисов; маршруты импортируются из OpenAPI каждого сервиса (`x-unauthenticated`, `x-permission`), по умолчанию всё закрыто; проксируются только зарегистрированные маршруты; личность передаётся заголовками `X-User*` и внутренним ключом, заголовки клиента копируются по белому списку (подделать личность нельзя), токен пользователя вниз не уходит; тело передаётся без изменений (подпись вебхука сохраняется).
 

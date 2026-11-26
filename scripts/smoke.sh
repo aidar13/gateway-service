@@ -88,6 +88,15 @@ status=$(orders_status); [ "$status" = 403 ] || { echo "expected 403 without a s
 SCOPE_ID=$(admin "$GW/api/admin/scopes" | json "next(s['id'] for s in d['data'] if s['name'] == 'web')")
 admin -X PUT "$GW/api/admin/clients/$APP_ID/scopes" -d "{\"scope_ids\":[$SCOPE_ID]}" >/dev/null
 status=$(orders_status); [ "$status" = 200 ] || { echo "expected 200 with the scope, got $status" >&2; exit 1; }
+# One permission per action: viewing services does not allow creating them or reading roles.
+USER_ID=$(req -H "Authorization: Bearer $APP_TOKEN" "$GW/api/auth/me" | json "d['data']['id']")
+admin -X PUT "$GW/api/admin/roles/$ROLE_ID" -d '{"permissions":["services.view"]}' >/dev/null
+admin -X PUT "$GW/api/admin/users/$USER_ID/roles" -d "{\"roles\":[\"$NAME\"]}" >/dev/null
+admin_status() { curl -s -o /dev/null -w '%{http_code}' -H 'Accept: application/json' -H 'Content-Type: application/json' -H "Authorization: Bearer $APP_TOKEN" -X "$1" "$GW/api/admin/$2"; }
+for check in "GET services 200" "POST services 403" "GET roles 403"; do
+    read -r method path expected <<<"$check"
+    status=$(admin_status "$method" "$path"); [ "$status" = "$expected" ] || { echo "expected $expected for $method $path, got $status" >&2; exit 1; }
+done
 admin -X DELETE "$GW/api/admin/clients/$APP_ID" >/dev/null
 status=$(orders_status); [ "$status" = 401 ] || { echo "expected 401 after revoking the client, got $status" >&2; exit 1; }
 admin -X DELETE "$GW/api/admin/roles/$ROLE_ID" >/dev/null

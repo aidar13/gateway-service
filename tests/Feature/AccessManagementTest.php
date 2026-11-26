@@ -44,12 +44,13 @@ final class AccessManagementTest extends ApiTestCase
     {
         $user = User::factory()->create();
         $this->asAdmin();
-        $this->postJson('/api/admin/roles', ['name' => 'registrar', 'permissions' => ['services.manage']])->assertCreated();
+        $this->postJson('/api/admin/roles', ['name' => 'registrar', 'permissions' => ['services.view']])->assertCreated();
         $this->putJson("/api/admin/users/{$user->id}/roles", ['roles' => ['registrar']])->assertOk();
 
         $this->freshAuth($this->accessTokenFor($user));
         $this->getJson('/api/admin/services')->assertOk();
-        // …and only that area.
+        // …and only that action.
+        $this->postJson('/api/admin/services', [])->assertForbidden();
         $this->getJson('/api/admin/roles')->assertForbidden();
         $this->getJson('/api/admin/scopes')->assertForbidden();
         $this->getJson('/api/admin/clients')->assertForbidden();
@@ -62,10 +63,10 @@ final class AccessManagementTest extends ApiTestCase
 
         $this->deleteJson("/api/admin/roles/{$admin}")->assertStatus(409);
         $this->putJson("/api/admin/roles/{$admin}", ['name' => 'root'])->assertStatus(409);
-        $this->putJson("/api/admin/roles/{$admin}", ['permissions' => ['services.manage']])->assertStatus(409);
+        $this->putJson("/api/admin/roles/{$admin}", ['permissions' => ['services.view']])->assertStatus(409);
         $this->deleteJson('/api/admin/roles/'.$this->roleId('client'))->assertStatus(409);
 
-        $permission = $this->permissionId('access.manage');
+        $permission = $this->permissionId('roles.view');
         $this->deleteJson("/api/admin/permissions/{$permission}")->assertStatus(409);
         $this->putJson("/api/admin/permissions/{$permission}", ['name' => 'other'])->assertStatus(409);
     }
@@ -85,7 +86,7 @@ final class AccessManagementTest extends ApiTestCase
         $this->asAdmin();
 
         $this->postJson('/api/admin/roles', ['name' => 'admin'])->assertUnprocessable();
-        $this->postJson('/api/admin/permissions', ['name' => 'access.manage'])->assertUnprocessable();
+        $this->postJson('/api/admin/permissions', ['name' => 'roles.view'])->assertUnprocessable();
         $this->postJson('/api/admin/roles', ['name' => 'x1', 'permissions' => ['nope']])->assertUnprocessable();
     }
 

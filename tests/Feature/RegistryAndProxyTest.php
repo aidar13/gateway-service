@@ -24,7 +24,7 @@ final class RegistryAndProxyTest extends ApiTestCase
         $this->service->routes()->createMany([
             ['method' => 'GET', 'path' => '/api/orders/{id}', 'requires_auth' => true],
             ['method' => 'POST', 'path' => '/api/payments/webhook', 'requires_auth' => false],
-            ['method' => 'GET', 'path' => '/api/reports', 'requires_auth' => true, 'permission' => 'services.manage'],
+            ['method' => 'GET', 'path' => '/api/reports', 'requires_auth' => true, 'permission' => 'services.view'],
         ]);
         // The test application may use the whole service; scopes have their own tests.
         $this->grantScope('web', $this->service);
@@ -46,7 +46,7 @@ final class RegistryAndProxyTest extends ApiTestCase
         Http::fake(['billing.test/*' => Http::response([
             'openapi' => '3.0.0',
             'paths' => [
-                '/api/invoices' => ['get' => ['summary' => 'List'], 'post' => ['x-permission' => 'services.manage']],
+                '/api/invoices' => ['get' => ['summary' => 'List'], 'post' => ['x-permission' => 'services.view']],
                 '/api/health' => ['get' => ['x-unauthenticated' => true]],
             ],
         ])]);
