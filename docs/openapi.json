@@ -1,0 +1,536 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+        "title": "Gateway Service API",
+        "description": "Authentication (password and one-time code), RBAC and a reverse proxy in front of the microservices.",
+        "version": "1.0.0"
+    },
+    "paths": {
+        "/oauth/token": {
+            "post": {
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Issue tokens: grant_type = password (login + password) | hash_and_code (one-time code) | refresh_token",
+                "operationId": "2dc26f7a3a3fd129523e9aca618cb9e8",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "grant_type",
+                                    "client_id",
+                                    "client_secret"
+                                ],
+                                "properties": {
+                                    "grant_type": {
+                                        "type": "string",
+                                        "enum": [
+                                            "password",
+                                            "hash_and_code",
+                                            "refresh_token"
+                                        ]
+                                    },
+                                    "client_id": {
+                                        "type": "string"
+                                    },
+                                    "client_secret": {
+                                        "type": "string"
+                                    },
+                                    "username": {
+                                        "description": "password grant: username, e-mail or phone",
+                                        "type": "string"
+                                    },
+                                    "password": {
+                                        "type": "string"
+                                    },
+                                    "hash": {
+                                        "description": "hash_and_code grant",
+                                        "type": "string"
+                                    },
+                                    "code": {
+                                        "description": "hash_and_code grant",
+                                        "type": "string"
+                                    },
+                                    "refresh_token": {
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "access_token, refresh_token, expires_in"
+                    },
+                    "400": {
+                        "description": "invalid_grant / invalid_request"
+                    },
+                    "401": {
+                        "description": "invalid_client"
+                    }
+                }
+            }
+        },
+        "/api/auth/register": {
+            "post": {
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Create an account with a login and password",
+                "operationId": "c7bb21a0d87049e161b8e4c9b0d909f2",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "name",
+                                    "username",
+                                    "email",
+                                    "password"
+                                ],
+                                "properties": {
+                                    "name": {
+                                        "type": "string"
+                                    },
+                                    "username": {
+                                        "type": "string",
+                                        "example": "jane"
+                                    },
+                                    "email": {
+                                        "type": "string"
+                                    },
+                                    "phone": {
+                                        "type": "string",
+                                        "nullable": true
+                                    },
+                                    "password": {
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Registered",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/User"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    }
+                }
+            }
+        },
+        "/api/auth/me": {
+            "get": {
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Current user",
+                "operationId": "b5de204f5e452ef51327c691aa99e77c",
+                "responses": {
+                    "200": {
+                        "description": "User",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/User"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ]
+            }
+        },
+        "/api/auth/logout": {
+            "post": {
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Revoke the current access and refresh tokens",
+                "operationId": "df9bdc6c7a6d9f20b983526b2ec0f698",
+                "responses": {
+                    "204": {
+                        "description": "Logged out"
+                    }
+                },
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ]
+            }
+        },
+        "/api/auth/code": {
+            "post": {
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Send a one-time code to a phone or e-mail (exactly one of them)",
+                "operationId": "2bd67665eb910200f2302b5c68773648",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "phone": {
+                                        "type": "string",
+                                        "example": "+15550001122"
+                                    },
+                                    "email": {
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Code sent",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Otp"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error"
+                    },
+                    "429": {
+                        "description": "Cooldown or rate limit"
+                    }
+                }
+            }
+        },
+        "/api/auth/code-repeat": {
+            "post": {
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Send a new code for an existing request",
+                "operationId": "412f85e1bb196978062907e06a1c0804",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "hash": {
+                                        "type": "string",
+                                        "format": "uuid"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Code sent",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Otp"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Request not active"
+                    },
+                    "429": {
+                        "description": "Cooldown or resend limit"
+                    }
+                }
+            }
+        },
+        "/api/admin/services": {
+            "get": {
+                "tags": [
+                    "Registry"
+                ],
+                "summary": "Registered microservices",
+                "operationId": "1701beb62e344e1677d426841ad1e947",
+                "responses": {
+                    "200": {
+                        "description": "Services"
+                    }
+                },
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Registry"
+                ],
+                "summary": "Register a microservice",
+                "operationId": "0ee39d35a8b7bf7a58228de0ae8ae2f8",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/Service"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Registered"
+                    },
+                    "403": {
+                        "description": "Not an admin"
+                    }
+                },
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ]
+            }
+        },
+        "/api/admin/services/{id}": {
+            "get": {
+                "tags": [
+                    "Registry"
+                ],
+                "summary": "A service with its routes",
+                "operationId": "ad3bcb96917121bfb91b943bf0cab30d",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Service"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    }
+                },
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ]
+            }
+        },
+        "/api/admin/services/{id}/import-routes": {
+            "post": {
+                "tags": [
+                    "Registry"
+                ],
+                "summary": "Re-read the OpenAPI document of the service and replace its routes",
+                "operationId": "d2eb24d581334b3a4d2a423524d9e410",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Imported"
+                    },
+                    "502": {
+                        "description": "Service unavailable"
+                    }
+                },
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ]
+            }
+        },
+        "/api/admin/users/{id}/roles": {
+            "put": {
+                "tags": [
+                    "Access"
+                ],
+                "summary": "Replace the roles of a user",
+                "operationId": "836113fe60d55a55f2164969df766d3e",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "roles": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string",
+                                            "enum": [
+                                                "admin",
+                                                "client"
+                                            ]
+                                        }
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Updated user"
+                    }
+                },
+                "security": [
+                    {
+                        "Bearer": []
+                    }
+                ]
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "Otp": {
+                "properties": {
+                    "hash": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "expires_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    },
+                    "resend_available_at": {
+                        "type": "string",
+                        "format": "date-time"
+                    }
+                },
+                "type": "object"
+            },
+            "Service": {
+                "properties": {
+                    "id": {
+                        "type": "integer"
+                    },
+                    "name": {
+                        "type": "string",
+                        "example": "orders"
+                    },
+                    "base_url": {
+                        "type": "string",
+                        "example": "http://order-nginx"
+                    },
+                    "openapi_path": {
+                        "type": "string",
+                        "example": "/api/openapi.json"
+                    },
+                    "is_active": {
+                        "type": "boolean"
+                    },
+                    "routes": {
+                        "type": "array",
+                        "items": {
+                            "type": "object"
+                        },
+                        "nullable": true
+                    }
+                },
+                "type": "object"
+            },
+            "User": {
+                "properties": {
+                    "id": {
+                        "type": "integer"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "username": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "email": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "phone": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "roles": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "type": "object"
+            }
+        },
+        "securitySchemes": {
+            "Bearer": {
+                "type": "http",
+                "scheme": "bearer"
+            }
+        }
+    },
+    "tags": [
+        {
+            "name": "Auth",
+            "description": "Auth"
+        },
+        {
+            "name": "Registry",
+            "description": "Registry"
+        },
+        {
+            "name": "Access",
+            "description": "Access"
+        }
+    ]
+}

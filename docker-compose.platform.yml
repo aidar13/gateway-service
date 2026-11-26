@@ -1,0 +1,132 @@
+# The whole platform: gateway + order-service + notification-service.
+# Expects ../order-service and ../notification-service next to this repository.
+# Use scripts/platform-up.sh — it builds the images, creates .env.platform (APP_KEY) and prepares the databases.
+
+x-env: &env
+  APP_ENV: local
+  APP_KEY: ${APP_KEY:?run scripts/platform-up.sh}
+  APP_DEBUG: "false"
+  DB_CONNECTION: mysql
+  DB_HOST: mysql
+  DB_USERNAME: app
+  DB_PASSWORD: secret
+  REDIS_HOST: redis
+  QUEUE_CONNECTION: redis
+  CACHE_STORE: redis
+  SESSION_DRIVER: file
+  LOG_CHANNEL: single
+
+x-gateway: &gateway
+  <<: *env
+  APP_NAME: gateway
+  DB_DATABASE: gateway
+  INTERNAL_API_KEY: local-internal-key
+  NOTIFICATION_SERVICE_URL: http://notifications-web
+  NOTIFICATION_SERVICE_API_KEY: local-notification-key
+  SEED_CLIENT_SECRET: local-web-client-secret
+  ORDER_SERVICE_URL: http://orders-web
+
+x-orders: &orders
+  <<: *env
+  APP_NAME: orders
+  DB_DATABASE: orders
+  INTERNAL_API_KEY: local-internal-key
+  FAKEPAY_WEBHOOK_SECRET: local-webhook-secret
+  NOTIFICATION_SERVICE_URL: http://notifications-web
+  NOTIFICATION_SERVICE_API_KEY: local-notification-key
+
+x-notifications: &notifications
+  <<: *env
+  APP_NAME: notifications
+  DB_DATABASE: notifications
+  NOTIFICATIONS_API_KEY: local-notification-key
+  MAIL_MAILER: smtp
+  MAIL_HOST: mailpit
+  MAIL_PORT: "1025"
+  MAIL_FROM_ADDRESS: no-reply@platform.example
+  SMS_DRIVER: log
+
+x-wait: &wait
+  mysql: { condition: service_healthy }
+  redis: { condition: service_started }
+
+services:
+  gateway:
+    image: portfolio-platform/gateway:local
+    volumes: [".:/var/www/html"]
+    environment: *gateway
+    depends_on: *wait
+  gateway-queue:
+    image: portfolio-platform/gateway:local
+    command: php artisan queue:work --queue=otp,default --tries=3
+    volumes: [".:/var/www/html"]
+    environment: *gateway
+    depends_on: *wait
+  gateway-web:
+    image: nginx:1.27-alpine
+    ports: ["8000:80"]
+    environment: { PHP_UPSTREAM: "gateway:9000" }
+    volumes:
+      - ".:/var/www/html:ro"
+      - "./docker/platform/nginx.conf.template:/etc/nginx/templates/default.conf.template:ro"
+    depends_on: [gateway]
+
+  orders:
+    image: portfolio-platform/orders:local
+    volumes: ["../order-service:/var/www/html"]
+    environment: *orders
+    depends_on: *wait
+  orders-queue:
+    image: portfolio-platform/orders:local
+    command: php artisan queue:work --tries=3
+    volumes: ["../order-service:/var/www/html"]
+    environment: *orders
+    depends_on: *wait
+  orders-web:
+    image: nginx:1.27-alpine
+    environment: { PHP_UPSTREAM: "orders:9000" }
+    volumes:
+      - "../order-service:/var/www/html:ro"
+      - "./docker/platform/nginx.conf.template:/etc/nginx/templates/default.conf.template:ro"
+    depends_on: [orders]
+
+  notifications:
+    image: portfolio-platform/notifications:local
+    volumes: ["../notification-service:/var/www/html"]
+    environment: *notifications
+    depends_on: *wait
+  notifications-queue:
+    image: portfolio-platform/notifications:local
+    command: php artisan queue:work --queue=otp,default --tries=4
+    volumes: ["../notification-service:/var/www/html"]
+    environment: *notifications
+    depends_on: *wait
+  notifications-web:
+    image: nginx:1.27-alpine
+    environment: { PHP_UPSTREAM: "notifications:9000" }
+    volumes:
+      - "../notification-service:/var/www/html:ro"
+      - "./docker/platform/nginx.conf.template:/etc/nginx/templates/default.conf.template:ro"
+    depends_on: [notifications]
+
+  mysql:
+    image: mysql:8.4
+    environment: { MYSQL_ROOT_PASSWORD: root }
+    volumes:
+      - "platform-mysql:/var/lib/mysql"
+      - "./docker/platform/init.sql:/docker-entrypoint-initdb.d/init.sql:ro"
+    healthcheck:
+      # TCP check: the temporary server used during initialisation does not listen on the network.
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "--protocol=tcp", "-uapp", "-psecret"]
+      interval: 5s
+      retries: 30
+
+  redis:
+    image: redis:7-alpine
+
+  mailpit:
+    image: axllent/mailpit
+    ports: ["8025:8025"]
+
+volumes:
+  platform-mysql:
