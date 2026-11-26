@@ -24,6 +24,7 @@ x-gateway: &gateway
   NOTIFICATION_SERVICE_URL: http://notifications-web
   NOTIFICATION_SERVICE_API_KEY: local-notification-key
   SEED_CLIENT_SECRET: local-web-client-secret
+  SEED_MOBILE_CLIENT_SECRET: local-mobile-client-secret
   ORDER_SERVICE_URL: http://orders-web
 
 x-orders: &orders

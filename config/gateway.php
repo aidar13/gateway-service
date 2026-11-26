@@ -29,7 +29,10 @@ return [
     'seed' => [
         'admin_password' => env('SEED_ADMIN_PASSWORD', 'admin-password-123'),
         'client_secret'  => env('SEED_CLIENT_SECRET', 'local-web-client-secret'),
-        'services'       => [
+        // Demo data, seeded only in the local and testing environments.
+        'user_password'        => env('SEED_USER_PASSWORD', 'password-123'),
+        'mobile_client_secret' => env('SEED_MOBILE_CLIENT_SECRET', 'local-mobile-client-secret'),
+        'services'             => [
             'orders' => env('ORDER_SERVICE_URL', 'http://order-nginx'),
         ],
     ],

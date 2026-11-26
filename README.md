@@ -107,7 +107,30 @@ Clone the three repositories side by side, then:
 Gateway: http://localhost:8000 · Mailpit (all e-mails, including codes): http://localhost:8025 · SMS are written to `../notification-service/storage/logs/laravel.log`.
 All secrets in `docker-compose.platform.yml` are throw-away local values.
 
-Seeded admin: `admin` / `admin-password-123` (`SEED_ADMIN_PASSWORD`). OAuth client: id printed by the seeder, secret `SEED_CLIENT_SECRET`.
+### Seed data
+
+`php artisan db:seed` is safe to run again: nothing is duplicated and manual changes are kept.
+
+Always seeded: system permissions and the `admin` / `client` roles, the administrator, the `orders` service, the `web` OAuth client and the `web` scope. Routes are not seeded — `php artisan gateway:import-routes` reads them from the service's OpenAPI document.
+
+Only in the `local` and `testing` environments — demo roles, accounts and a second client:
+
+| Login | Password | Role | What it shows |
+|---|---|---|---|
+| `admin` | `admin-password-123` | `admin` | every permission (always seeded) |
+| `manager` | `password-123` | `service-manager` | services, routes, scope bindings |
+| `security` | `password-123` | `access-manager` | roles, permissions, user roles |
+| `auditor` | `password-123` | `auditor` | read-only administration |
+| `client` / `+15550000001` | `password-123` | `client` | password or one-time code |
+| `+15550000002` | — | `client` | one-time code only |
+| `blocked` | `password-123` | `client` | disabled account: sign-in is refused |
+
+| OAuth client | Secret | Scope |
+|---|---|---|
+| `web` | `SEED_CLIENT_SECRET` (`local-web-client-secret`) | `web`: every seeded service |
+| `mobile` | `SEED_MOBILE_CLIENT_SECRET` (`local-mobile-client-secret`) | `orders`: the order service only |
+
+Client ids are printed by the seeder. Passwords come from `SEED_ADMIN_PASSWORD` and `SEED_USER_PASSWORD`.
 
 ## API examples
 
@@ -179,3 +202,5 @@ API-шлюз небольшой микросервисной платформы 
 **Архитектура:** Controller → FormRequest → Command → Handler → контракт → репозиторий/адаптер. Event `OtpIssuedEvent` → listener → зашифрованный Job. SOLID: отдельные классы на сопоставление, разбор, проксирование (SRP), новый способ входа — новый grant (OCP), зависимости на интерфейсы (DIP).
 
 **Запуск всей платформы** (три репозитория рядом): `./scripts/platform-up.sh`, затем `./scripts/smoke.sh` — сквозной сценарий «OTP → заказ → оплата → письма». Проверки: `composer test`, `composer analyse`, `composer lint`.
+
+**Сидеры** (`php artisan db:seed`, повторный запуск безопасен): всегда — системные права и роли, администратор, сервис `orders`, OAuth-клиент `web` и скоуп `web`; только в `local` и `testing` — демо-роли (`service-manager`, `access-manager`, `auditor`), пользователи и клиент `mobile` (таблица выше).

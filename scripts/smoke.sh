@@ -22,7 +22,7 @@ mail_text() { # newest message for $EMAIL whose subject contains $1
     echo "no e-mail with subject '$1'" >&2; return 1
 }
 
-CLIENT_ID=$(dc exec -T mysql mysql -uapp -psecret -N gateway -e 'select id from oauth_clients where password_client = 1 limit 1' 2>/dev/null | tr -d '\r')
+CLIENT_ID=$(dc exec -T mysql mysql -uapp -psecret -N gateway -e 'select id from oauth_clients where name = "web"' 2>/dev/null | tr -d '\r')
 
 echo "1. request a one-time code for $EMAIL"
 HASH=$(req -X POST "$GW/api/auth/code" -d "{\"email\":\"$EMAIL\"}" | json "d['data']['hash']")
@@ -100,6 +100,14 @@ done
 admin -X DELETE "$GW/api/admin/clients/$APP_ID" >/dev/null
 status=$(orders_status); [ "$status" = 401 ] || { echo "expected 401 after revoking the client, got $status" >&2; exit 1; }
 admin -X DELETE "$GW/api/admin/roles/$ROLE_ID" >/dev/null
+
+echo "11b. seeded demo accounts: the auditor reads the admin API but cannot change it"
+AUDITOR=$(req -X POST "$GW/oauth/token" -d "{\"grant_type\":\"password\",\"client_id\":\"$CLIENT_ID\",\"client_secret\":\"$CLIENT_SECRET\",\"username\":\"auditor\",\"password\":\"password-123\"}" | json "d['access_token']")
+for check in "GET 200" "POST 403"; do
+    read -r method expected <<<"$check"
+    status=$(curl -s -o /dev/null -w '%{http_code}' -H 'Accept: application/json' -H "Authorization: Bearer $AUDITOR" -X "$method" "$GW/api/admin/services")
+    [ "$status" = "$expected" ] || { echo "expected $expected for $method services, got $status" >&2; exit 1; }
+done
 
 echo "12. logout revokes the token"
 curl -sS -o /dev/null -X POST "$GW/api/auth/logout" -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN"
