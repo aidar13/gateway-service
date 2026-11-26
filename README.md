@@ -3,7 +3,7 @@
 🇬🇧 English · [🇷🇺 Русский](#русский)
 
 API gateway of a small microservice platform (fictional logistics company, portfolio project), Laravel 11:
-authentication, authorisation and a reverse proxy in front of [`order-service`](../order-service) and [`notification-service`](../notification-service).
+authentication, authorisation and a reverse proxy in front of [`order-service`](https://github.com/aidar13/order-service) and [`notification-service`](https://github.com/aidar13/notification-service).
 
 ## Features
 
