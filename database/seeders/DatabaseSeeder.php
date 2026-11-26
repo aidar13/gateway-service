@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Database\Seeders;
 
+use App\Models\AccessScope;
 use App\Models\Microservice;
 use App\Models\User;
 use Illuminate\Database\Seeder;
@@ -34,6 +35,13 @@ final class DatabaseSeeder extends Seeder
             $client = $clients->createPasswordGrantClient(null, 'web', 'http://localhost');
             $client->forceFill(['secret' => (string) config('gateway.seed.client_secret')])->save();
         }
+
+        // Default scope: the first-party application may use every seeded service.
+        $scope = AccessScope::query()->firstOrCreate(['name' => 'web'], ['description' => 'First-party applications']);
+        $scope->services()->syncWithoutDetaching(
+            Microservice::query()->whereIn('name', array_keys($services))->pluck('id')->all(),
+        );
+        $scope->clients()->syncWithoutDetaching([$client->getKey()]);
 
         $this->command->info("OAuth client_id: {$client->getKey()} (secret: SEED_CLIENT_SECRET)");
     }

@@ -28,6 +28,11 @@ final class EloquentUserRepository implements UserRepository
         return User::query()->find($id);
     }
 
+    public function countActiveWithRole(string $role): int
+    {
+        return User::query()->role($role, 'api')->where('is_active', true)->count();
+    }
+
     public function findByDestination(OtpDestination $destination): ?User
     {
         return User::query()->where($destination->channel->userColumn(), $destination->value)->first();

@@ -16,6 +16,11 @@ final class ProxyDenied extends ApiException
         return new self('Unauthenticated.', 401);
     }
 
+    public static function outOfScope(): self
+    {
+        return new self('This application has no scope for the route.', 403);
+    }
+
     public static function forbidden(string $permission): self
     {
         return new self("Missing permission '{$permission}'.", 403);

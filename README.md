@@ -22,7 +22,23 @@ authentication, authorisation and a reverse proxy in front of [`order-service`](
 - the account is created only **after** the code is confirmed; such accounts have no password, so password login is impossible for them;
 - **pre-hijacking guard**: if a contact was registered but never verified, the first code sign-in hands the account to its real owner — password removed, other unverified contacts dropped, old tokens revoked.
 
-**Authorisation** — roles and permissions (`spatie/laravel-permission`): `admin`, `client`; admin API is guarded by `gateway.manage`; deactivating a user takes effect immediately.
+**Authorisation** has two independent checks:
+
+1. **User** — roles and permissions (`spatie/laravel-permission`). Routes may declare `x-permission`.
+2. **Application** — **scopes** of the OAuth client. A private route is reachable only if an active scope of the calling client covers it: the whole service (including routes imported later) or that single route. A token can be narrowed with the standard `scope` parameter. Deny by default.
+
+Deactivating a user, a scope or a client takes effect immediately.
+
+**Administration API** (`/api/admin`) — each area has its own permission, so duties can be split:
+
+| Area | Permission | Endpoints |
+|---|---|---|
+| Services, routes | `services.manage` | CRUD `services`, `POST services/{id}/import-routes`, `GET routes` |
+| Roles, permissions, user roles | `access.manage` | CRUD `roles`, CRUD `permissions`, `PUT users/{id}/roles` |
+| Scopes | `scopes.manage` | CRUD `scopes`, `PUT/DELETE scopes/{id}/services/{serviceId}`, `PUT/DELETE scopes/{id}/routes/{routeId}` |
+| OAuth clients | `clients.manage` | list/create/revoke `clients`, `PUT clients/{id}/scopes` |
+
+Safety rules: system roles and permissions cannot be renamed or deleted, the `admin` role keeps all system permissions, the last active administrator cannot lose the role, the client in use cannot revoke itself, re-importing routes keeps their scope bindings. `access.manage` can grant any role and is therefore equivalent to full administration.
 
 **Gateway**
 
@@ -37,7 +53,8 @@ authentication, authorisation and a reverse proxy in front of [`order-service`](
 Controller → FormRequest → Command → Handler → Contract → Repository / adapter → Model
 Auth:     IssueOtpHandler / ResendOtpHandler ─ event OtpIssued → listener → encrypted job DeliverOtp → NotificationClient
           OtpGrant (/oauth/token) → VerifyOtpCommand
-Gateway:  ProxyController → ProxyRequestHandler → ServiceRepository → RouteMatcher → authorise → UpstreamClient
+Gateway:  ProxyController → ProxyRequestHandler → ServiceRepository → RouteMatcher → ClientScopeGate + permission → UpstreamClient
+Admin:    controllers → commands (Access, Gateway, Scope, Client) → handlers → repository contracts
           ImportServiceRoutesHandler → OpenApiFetcher → OpenApiParser → ServiceRepository
 ```
 
@@ -90,9 +107,22 @@ A=(-H "Authorization: Bearer <access_token>" "${J[@]}")
 curl $GW/api/auth/me "${A[@]}"
 curl -X POST $GW/api/auth/logout "${A[@]}"
 
-# admin: register a service and import its routes
-curl -X POST $GW/api/admin/services "${A[@]}" -d '{"name":"billing","base_url":"http://billing"}'
-curl -X POST $GW/api/admin/services/2/import-routes "${A[@]}"
+# admin: register a service, import its routes, switch it off
+curl -X POST  $GW/api/admin/services "${A[@]}" -d '{"name":"billing","base_url":"http://billing"}'
+curl -X POST  $GW/api/admin/services/2/import-routes "${A[@]}"
+curl -X PATCH $GW/api/admin/services/2 "${A[@]}" -d '{"is_active":false}'
+curl "$GW/api/admin/routes?service_id=2&search=invoice" "${A[@]}"
+
+# admin: roles and permissions
+curl -X POST $GW/api/admin/permissions "${A[@]}" -d '{"name":"reports.view"}'
+curl -X POST $GW/api/admin/roles "${A[@]}" -d '{"name":"manager","permissions":["reports.view"]}'
+curl -X PUT  $GW/api/admin/users/5/roles "${A[@]}" -d '{"roles":["manager"]}'
+
+# admin: scopes and applications
+curl -X POST $GW/api/admin/scopes "${A[@]}" -d '{"name":"orders:read","description":"Read orders"}'
+curl -X PUT  $GW/api/admin/scopes/2/routes/3 "${A[@]}"          # one route
+curl -X PUT  $GW/api/admin/scopes/2/services/2 "${A[@]}"        # or a whole service
+curl -X POST $GW/api/admin/clients "${A[@]}" -d '{"name":"mobile","scope_ids":[2]}'   # secret is shown once
 
 # call a microservice through the gateway
 curl $GW/gateway/orders/api/products "${J[@]}"
@@ -119,7 +149,9 @@ API-шлюз небольшой микросервисной платформы 
 
 **Защита OTP:** хранится только хэш кода, job в очереди зашифрован; TTL 5 минут, одноразовость, лимит попыток (атомарный, повторная отправка его не восстанавливает), пауза и лимит на повтор, rate limit; аккаунт создаётся только после подтверждения кода и не имеет пароля. Если контакт был указан при регистрации, но не подтверждён, первый вход по коду передаёт аккаунт настоящему владельцу контакта (пароль и чужие сессии сбрасываются).
 
-**Авторизация:** роли и права (spatie), админ-API под `gateway.manage`, деактивация действует сразу.
+**Авторизация — две независимые проверки.** Пользователь: роли и права (spatie), маршрут может требовать `x-permission`. Приложение: **скоупы** OAuth-клиента — приватный маршрут доступен, только если активный скоуп клиента покрывает весь сервис (включая новые маршруты) или конкретный маршрут; токен можно сузить параметром `scope`; по умолчанию доступ закрыт.
+
+**Админ-API** (`/api/admin`): сервисы и маршруты (`services.manage`), роли, права и роли пользователей (`access.manage`), скоупы и привязки (`scopes.manage`), OAuth-клиенты (`clients.manage`). Защиты: системные роли и права нельзя удалить или переименовать, роль `admin` сохраняет все системные права, последний администратор не может лишиться роли, нельзя отозвать клиента, через которого вошёл, повторный импорт маршрутов сохраняет привязки к скоупам. `access.manage` позволяет выдать любую роль, то есть равен полному администрированию.
 
 **Шлюз:** реестр микросервисов; маршруты импортируются из OpenAPI каждого сервиса (`x-unauthenticated`, `x-permission`), по умолчанию всё закрыто; проксируются только зарегистрированные маршруты; личность передаётся заголовками `X-User*` и внутренним ключом, заголовки клиента копируются по белому списку (подделать личность нельзя), токен пользователя вниз не уходит; тело передаётся без изменений (подпись вебхука сохраняется).
 

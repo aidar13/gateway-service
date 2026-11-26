@@ -15,6 +15,8 @@ interface UserRepository
 
     public function find(int $id): ?User;
 
+    public function countActiveWithRole(string $role): int;
+
     public function findByDestination(OtpDestination $destination): ?User;
 
     public function createFromDestination(OtpDestination $destination): User;

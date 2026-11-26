@@ -15,6 +15,8 @@ final class ServiceRouteResource extends JsonResource
     public function toArray(Request $request): array
     {
         return [
+            'id' => $this->id,
+            'service_id' => $this->microservice_id,
             'method' => $this->method,
             'path' => $this->path,
             'requires_auth' => $this->requires_auth,

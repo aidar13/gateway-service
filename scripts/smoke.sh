@@ -1,5 +1,5 @@
 #!/usr/bin/env sh
-# End-to-end check through the gateway: OTP sign-in (e-mail and SMS) → order → payment → e-mails.
+# End-to-end check through the gateway: OTP sign-in (e-mail and SMS) → order → payment → e-mails → access management.
 # Note: the gateway allows 10 sign-in requests per minute per IP, so wait a minute between repeated runs.
 set -eu
 cd "$(dirname "$0")/.."
@@ -46,7 +46,7 @@ done
 req -X POST "$GW/oauth/token" -d "{\"grant_type\":\"hash_and_code\",\"client_id\":\"$CLIENT_ID\",\"client_secret\":\"$CLIENT_SECRET\",\"hash\":\"$PHONE_HASH\",\"code\":\"$SMS_CODE\"}" | json "'   token type: ' + d['token_type']"
 
 echo "4. password login of the seeded admin"
-req -X POST "$GW/oauth/token" -d "{\"grant_type\":\"password\",\"client_id\":\"$CLIENT_ID\",\"client_secret\":\"$CLIENT_SECRET\",\"username\":\"admin\",\"password\":\"admin-password-123\"}" | json "'   token type: ' + d['token_type']"
+ADMIN=$(req -X POST "$GW/oauth/token" -d "{\"grant_type\":\"password\",\"client_id\":\"$CLIENT_ID\",\"client_secret\":\"$CLIENT_SECRET\",\"username\":\"admin\",\"password\":\"admin-password-123\"}" | json "d['access_token']")
 
 echo "5. anonymous request to a protected route is refused"
 status=$(curl -s -o /dev/null -w '%{http_code}' -H 'Accept: application/json' "$GW/gateway/orders/api/orders")
@@ -73,7 +73,26 @@ echo "10. receipts arrived"
 mail_text 'created' >/dev/null
 mail_text 'Payment received' >/dev/null
 
-echo "11. logout revokes the token"
+echo "11. access management: a new application has no scope until an admin grants one"
+admin() { req -H "Authorization: Bearer $ADMIN" "$@"; }
+NAME="smoke$(date +%s)"
+admin -X POST "$GW/api/admin/permissions" -d "{\"name\":\"$NAME.view\"}" >/dev/null
+ROLE_ID=$(admin -X POST "$GW/api/admin/roles" -d "{\"name\":\"$NAME\",\"permissions\":[\"$NAME.view\"]}" | json "d['data']['id']")
+CREATED=$(admin -X POST "$GW/api/admin/clients" -d "{\"name\":\"$NAME\"}")
+APP_ID=$(echo "$CREATED" | json "d['data']['id']")
+APP_SECRET=$(echo "$CREATED" | json "d['secret']")
+req -X POST "$GW/api/auth/register" -d "{\"name\":\"Smoke\",\"username\":\"$NAME\",\"email\":\"$NAME@example.test\",\"password\":\"password-123\"}" >/dev/null
+APP_TOKEN=$(req -X POST "$GW/oauth/token" -d "{\"grant_type\":\"password\",\"client_id\":\"$APP_ID\",\"client_secret\":\"$APP_SECRET\",\"username\":\"$NAME\",\"password\":\"password-123\"}" | json "d['access_token']")
+orders_status() { curl -s -o /dev/null -w '%{http_code}' -H 'Accept: application/json' -H "Authorization: Bearer $APP_TOKEN" "$GW/gateway/orders/api/orders"; }
+status=$(orders_status); [ "$status" = 403 ] || { echo "expected 403 without a scope, got $status" >&2; exit 1; }
+SCOPE_ID=$(admin "$GW/api/admin/scopes" | json "next(s['id'] for s in d['data'] if s['name'] == 'web')")
+admin -X PUT "$GW/api/admin/clients/$APP_ID/scopes" -d "{\"scope_ids\":[$SCOPE_ID]}" >/dev/null
+status=$(orders_status); [ "$status" = 200 ] || { echo "expected 200 with the scope, got $status" >&2; exit 1; }
+admin -X DELETE "$GW/api/admin/clients/$APP_ID" >/dev/null
+status=$(orders_status); [ "$status" = 401 ] || { echo "expected 401 after revoking the client, got $status" >&2; exit 1; }
+admin -X DELETE "$GW/api/admin/roles/$ROLE_ID" >/dev/null
+
+echo "12. logout revokes the token"
 curl -sS -o /dev/null -X POST "$GW/api/auth/logout" -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN"
 status=$(curl -s -o /dev/null -w '%{http_code}' -H 'Accept: application/json' -H "Authorization: Bearer $TOKEN" "$GW/gateway/orders/api/orders")
 [ "$status" = 401 ] || { echo "expected 401 after logout, got $status" >&2; exit 1; }

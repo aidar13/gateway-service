@@ -13,5 +13,7 @@ final readonly class RouteDefinition
         public bool $requiresAuth = true,
         public ?string $permission = null,
         public ?string $summary = null,
+        /** Id in the registry; null for a route that was only parsed. */
+        public ?int $id = null,
     ) {}
 }

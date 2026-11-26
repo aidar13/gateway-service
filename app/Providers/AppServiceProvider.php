@@ -10,18 +10,27 @@ use App\Auth\RandomCodeGenerator;
 use App\Contracts\CodeGenerator;
 use App\Contracts\CommandBus;
 use App\Contracts\NotificationClient;
+use App\Contracts\OAuthClientRepository;
 use App\Contracts\OpenApiFetcher;
 use App\Contracts\OtpRepository;
+use App\Contracts\PermissionRepository;
+use App\Contracts\RoleRepository;
+use App\Contracts\ScopeRepository;
 use App\Contracts\ServiceRepository;
 use App\Contracts\UpstreamClient;
 use App\Contracts\UserRepository;
 use App\Gateway\HttpOpenApiFetcher;
 use App\Gateway\HttpUpstreamClient;
+use App\Models\OAuthClient;
 use App\Notifications\HttpNotificationClient;
 use App\Notifications\LogNotificationClient;
 use App\Repositories\EloquentOtpRepository;
+use App\Repositories\EloquentScopeRepository;
 use App\Repositories\EloquentServiceRepository;
 use App\Repositories\EloquentUserRepository;
+use App\Repositories\PassportClientRepository;
+use App\Repositories\SpatiePermissionRepository;
+use App\Repositories\SpatieRoleRepository;
 use DateInterval;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Contracts\Foundation\Application;
@@ -44,6 +53,10 @@ final class AppServiceProvider extends ServiceProvider
         $this->app->bind(UserRepository::class, EloquentUserRepository::class);
         $this->app->bind(OtpRepository::class, EloquentOtpRepository::class);
         $this->app->bind(ServiceRepository::class, EloquentServiceRepository::class);
+        $this->app->bind(RoleRepository::class, SpatieRoleRepository::class);
+        $this->app->bind(PermissionRepository::class, SpatiePermissionRepository::class);
+        $this->app->bind(ScopeRepository::class, EloquentScopeRepository::class);
+        $this->app->bind(OAuthClientRepository::class, PassportClientRepository::class);
         $this->app->bind(OpenApiFetcher::class, HttpOpenApiFetcher::class);
 
         $this->app->bind(CodeGenerator::class, fn () => new RandomCodeGenerator((int) config('gateway.otp.length')));
@@ -83,6 +96,7 @@ final class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Passport::enablePasswordGrant();
+        Passport::useClientModel(OAuthClient::class);
         $accessTtl = new DateInterval('PT1H');
         $refreshTtl = new DateInterval('P30D');
         Passport::tokensExpireIn($accessTtl);
@@ -96,6 +110,9 @@ final class AppServiceProvider extends ServiceProvider
             $grant->setRefreshTokenTTL($refreshTtl);
 
             $server->enableGrantType($grant, $accessTtl);
+
+            // Scopes live in the database; advertised only when a token is actually being issued.
+            Passport::tokensCan($this->app->make(ScopeRepository::class)->activeDescriptions());
         });
 
         // Brute-force protection for everything that checks or sends a secret.

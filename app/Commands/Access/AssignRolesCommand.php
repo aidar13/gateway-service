@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Commands\Auth;
+namespace App\Commands\Access;
 
 use App\Contracts\Command;
 use App\Models\User;

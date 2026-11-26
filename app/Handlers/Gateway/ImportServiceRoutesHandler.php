@@ -26,7 +26,7 @@ final class ImportServiceRoutesHandler
         // Parse first: a broken document must not wipe the routes that already work.
         $routes = $this->parser->parse($this->fetcher->fetch($service));
 
-        $this->services->replaceRoutes($service, $routes);
+        $this->services->syncRoutes($service, $routes);
 
         return count($routes);
     }

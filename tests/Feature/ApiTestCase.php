@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
+use App\Models\AccessScope;
+use App\Models\Microservice;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Testing\TestResponse;
@@ -52,5 +54,31 @@ abstract class ApiTestCase extends TestCase
         $this->flushHeaders();
 
         return $token === null ? $this : $this->withToken($token);
+    }
+
+    protected function admin(): User
+    {
+        $admin = User::factory()->create();
+        $admin->assignRole('admin');
+
+        return $admin;
+    }
+
+    protected function asAdmin(): static
+    {
+        return $this->freshAuth($this->accessTokenFor($this->admin()));
+    }
+
+    /** A scope given to the test OAuth client, optionally covering a whole service. */
+    protected function grantScope(string $name, ?Microservice $service = null): AccessScope
+    {
+        $scope = AccessScope::query()->create(['name' => $name]);
+        $scope->clients()->attach($this->oauth->getKey());
+
+        if ($service !== null) {
+            $scope->services()->attach($service->id);
+        }
+
+        return $scope;
     }
 }

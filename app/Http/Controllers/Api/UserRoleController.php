@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Api;
 
-use App\Commands\Auth\AssignRolesCommand;
+use App\Commands\Access\AssignRolesCommand;
 use App\Contracts\CommandBus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\AssignRolesRequest;
@@ -22,7 +22,7 @@ final class UserRoleController extends Controller
         ])),
         tags: ['Access'],
         parameters: [new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))],
-        responses: [new OA\Response(response: 200, description: 'Updated user')],
+        responses: [new OA\Response(response: 200, description: 'Updated user'), new OA\Response(response: 409, description: 'Last administrator')],
     )]
     public function __invoke(int $id, AssignRolesRequest $request, CommandBus $bus): UserResource
     {
