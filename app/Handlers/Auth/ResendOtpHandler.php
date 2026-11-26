@@ -2,9 +2,10 @@
 
 declare(strict_types=1);
 
-namespace App\Actions\Auth;
+namespace App\Handlers\Auth;
 
 use App\Auth\OtpSettings;
+use App\Commands\Auth\ResendOtpCommand;
 use App\Contracts\CodeGenerator;
 use App\Contracts\OtpRepository;
 use App\DTO\OtpDestination;
@@ -16,7 +17,7 @@ use Carbon\CarbonImmutable;
 use Illuminate\Contracts\Events\Dispatcher;
 use Illuminate\Contracts\Hashing\Hasher;
 
-final class ResendOtp
+final class ResendOtpHandler
 {
     public function __construct(
         private readonly OtpRepository $codes,
@@ -26,8 +27,10 @@ final class ResendOtp
         private readonly OtpSettings $settings,
     ) {}
 
-    public function execute(string $hash): OtpCode
+    public function handle(ResendOtpCommand $command): OtpCode
     {
+        $hash = $command->hash;
+
         $otp = $this->codes->findByHash($hash);
 
         // An expired code may be re-sent; a consumed or brute-forced one may not.

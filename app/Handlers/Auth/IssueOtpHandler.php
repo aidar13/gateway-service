@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace App\Actions\Auth;
+namespace App\Handlers\Auth;
 
 use App\Auth\OtpSettings;
+use App\Commands\Auth\IssueOtpCommand;
 use App\Contracts\CodeGenerator;
 use App\Contracts\OtpRepository;
-use App\DTO\OtpDestination;
 use App\Events\OtpIssued;
 use App\Exceptions\OtpThrottled;
 use App\Models\OtpCode;
@@ -16,7 +16,7 @@ use Illuminate\Contracts\Events\Dispatcher;
 use Illuminate\Contracts\Hashing\Hasher;
 
 /** First request of a one-time code for a phone number or e-mail. */
-final class IssueOtp
+final class IssueOtpHandler
 {
     public function __construct(
         private readonly OtpRepository $codes,
@@ -26,8 +26,10 @@ final class IssueOtp
         private readonly OtpSettings $settings,
     ) {}
 
-    public function execute(OtpDestination $destination): OtpCode
+    public function handle(IssueOtpCommand $command): OtpCode
     {
+        $destination = $command->destination;
+
         $this->guardCooldown($this->codes->latestFor($destination));
 
         $code = $this->generator->generate();

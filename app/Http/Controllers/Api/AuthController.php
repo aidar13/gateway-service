@@ -4,8 +4,9 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Api;
 
-use App\Actions\Auth\Logout;
-use App\Actions\Auth\RegisterUser;
+use App\Commands\Auth\LogoutCommand;
+use App\Commands\Auth\RegisterUserCommand;
+use App\Contracts\CommandBus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\RegisterRequest;
 use App\Http\Resources\UserResource;
@@ -40,6 +41,8 @@ use OpenApi\Attributes as OA;
 )]
 final class AuthController extends Controller
 {
+    public function __construct(private readonly CommandBus $bus) {}
+
     #[OA\Post(
         path: '/api/auth/register',
         summary: 'Create an account with a login and password',
@@ -59,9 +62,9 @@ final class AuthController extends Controller
             new OA\Response(response: 422, description: 'Validation error'),
         ],
     )]
-    public function register(RegisterRequest $request, RegisterUser $action): JsonResponse
+    public function register(RegisterRequest $request): JsonResponse
     {
-        return (new UserResource($action->execute($request->toDto())))->response()->setStatusCode(201);
+        return (new UserResource($this->bus->dispatch(new RegisterUserCommand($request->toDto()))))->response()->setStatusCode(201);
     }
 
     #[OA\Get(
@@ -83,9 +86,9 @@ final class AuthController extends Controller
         tags: ['Auth'],
         responses: [new OA\Response(response: 204, description: 'Logged out')],
     )]
-    public function logout(#[CurrentUser] User $user, Logout $action): Response
+    public function logout(#[CurrentUser] User $user): Response
     {
-        $action->execute($user);
+        $this->bus->dispatch(new LogoutCommand($user));
 
         return response()->noContent();
     }

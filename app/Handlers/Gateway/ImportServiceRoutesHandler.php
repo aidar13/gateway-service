@@ -2,15 +2,15 @@
 
 declare(strict_types=1);
 
-namespace App\Actions\Gateway;
+namespace App\Handlers\Gateway;
 
+use App\Commands\Gateway\ImportServiceRoutesCommand;
 use App\Contracts\OpenApiFetcher;
 use App\Contracts\ServiceRepository;
 use App\Gateway\OpenApiParser;
-use App\Models\Microservice;
 
 /** Synchronises the route registry with the service's own OpenAPI document. */
-final class ImportRoutes
+final class ImportServiceRoutesHandler
 {
     public function __construct(
         private readonly OpenApiFetcher $fetcher,
@@ -19,8 +19,10 @@ final class ImportRoutes
     ) {}
 
     /** @return int number of routes now registered */
-    public function execute(Microservice $service): int
+    public function handle(ImportServiceRoutesCommand $command): int
     {
+        $service = $command->service;
+
         // Parse first: a broken document must not wipe the routes that already work.
         $routes = $this->parser->parse($this->fetcher->fetch($service));
 

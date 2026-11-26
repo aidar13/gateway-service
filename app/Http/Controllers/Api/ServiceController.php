@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Api;
 
-use App\Actions\Gateway\ImportRoutes;
+use App\Commands\Gateway\ImportServiceRoutesCommand;
+use App\Commands\Gateway\RegisterServiceCommand;
+use App\Contracts\CommandBus;
 use App\Contracts\ServiceRepository;
 use App\Exceptions\ResourceNotFound;
 use App\Http\Controllers\Controller;
@@ -17,7 +19,10 @@ use OpenApi\Attributes as OA;
 
 final class ServiceController extends Controller
 {
-    public function __construct(private readonly ServiceRepository $services) {}
+    public function __construct(
+        private readonly ServiceRepository $services,
+        private readonly CommandBus $bus,
+    ) {}
 
     #[OA\Get(
         path: '/api/admin/services',
@@ -41,11 +46,11 @@ final class ServiceController extends Controller
     )]
     public function store(StoreServiceRequest $request): JsonResponse
     {
-        $service = $this->services->create(
+        $service = $this->bus->dispatch(new RegisterServiceCommand(
             (string) $request->validated('name'),
             (string) $request->validated('base_url'),
             (string) $request->validated('openapi_path', '/api/openapi.json'),
-        );
+        ));
 
         return (new ServiceResource($service))->response()->setStatusCode(201);
     }
@@ -71,10 +76,10 @@ final class ServiceController extends Controller
         parameters: [new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))],
         responses: [new OA\Response(response: 200, description: 'Imported'), new OA\Response(response: 502, description: 'Service unavailable')],
     )]
-    public function importRoutes(int $id, ImportRoutes $action): ServiceResource
+    public function importRoutes(int $id): ServiceResource
     {
         $service = $this->findOrFail($id);
-        $action->execute($service);
+        $this->bus->dispatch(new ImportServiceRoutesCommand($service));
 
         return new ServiceResource($service);
     }

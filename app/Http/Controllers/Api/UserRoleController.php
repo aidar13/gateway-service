@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Api;
 
-use App\Contracts\UserRepository;
-use App\Exceptions\ResourceNotFound;
+use App\Commands\Auth\AssignRolesCommand;
+use App\Contracts\CommandBus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\AssignRolesRequest;
 use App\Http\Resources\UserResource;
@@ -24,11 +24,8 @@ final class UserRoleController extends Controller
         parameters: [new OA\Parameter(name: 'id', in: 'path', required: true, schema: new OA\Schema(type: 'integer'))],
         responses: [new OA\Response(response: 200, description: 'Updated user')],
     )]
-    public function __invoke(int $id, AssignRolesRequest $request, UserRepository $users): UserResource
+    public function __invoke(int $id, AssignRolesRequest $request, CommandBus $bus): UserResource
     {
-        $user = $users->find($id) ?? throw ResourceNotFound::make('User');
-        $user->syncRoles($request->roles());
-
-        return new UserResource($user);
+        return new UserResource($bus->dispatch(new AssignRolesCommand($id, $request->roles())));
     }
 }

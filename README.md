@@ -34,20 +34,28 @@ authentication, authorisation and a reverse proxy in front of [`order-service`](
 ## Architecture
 
 ```
-Controller → FormRequest → DTO → Action → Contract → Repository / adapter → Model
-Auth:     IssueOtp / ResendOtp ─ event OtpIssued → listener → encrypted job DeliverOtp → NotificationClient
-          OtpGrant (/oauth/token) → VerifyOtp
-Gateway:  ProxyController → ProxyRequest → ServiceRepository → RouteMatcher → authorise → UpstreamClient
-          ImportRoutes → OpenApiFetcher → OpenApiParser → ServiceRepository
+Controller → FormRequest → Command → Handler → Contract → Repository / adapter → Model
+Auth:     IssueOtpHandler / ResendOtpHandler ─ event OtpIssued → listener → encrypted job DeliverOtp → NotificationClient
+          OtpGrant (/oauth/token) → VerifyOtpCommand
+Gateway:  ProxyController → ProxyRequestHandler → ServiceRepository → RouteMatcher → authorise → UpstreamClient
+          ImportServiceRoutesHandler → OpenApiFetcher → OpenApiParser → ServiceRepository
 ```
 
 | Principle | Where |
 |---|---|
-| SRP | matching, parsing, forwarding and authorisation are separate classes; one Action per use case |
+| SRP | matching, parsing, forwarding and authorisation are separate classes; one command and handler per use case |
 | OCP | a new sign-in method = a new OAuth grant class; a new delivery transport = a new `NotificationClient` |
-| DIP | Actions depend on contracts bound in `AppServiceProvider` |
+| DIP | handlers depend on contracts bound in service providers |
 | DRY | one token endpoint for every sign-in method; one `OtpIssued` path for first send and resend |
 | KISS | one catch-all proxy route and a ~60-line matcher instead of generating framework routes from the database |
+
+## Commands and handlers
+
+Every use case is a **command** (immutable data, `app/Commands`) handled by exactly one **handler** (`app/Handlers`). Callers depend on the `CommandBus` interface; `LaravelCommandBus` runs it on Laravel's bus synchronously, and the map lives in `CommandBusServiceProvider`. `Command<TResult>` is generic, so PHPStan knows what `dispatch()` returns, and a test fails the build if a command has no handler.
+
+```php
+$user = $this->bus->dispatch(new VerifyOtpCommand($hash, $code)); // User|null
+```
 
 ## Run the whole platform
 
@@ -115,6 +123,6 @@ API-шлюз небольшой микросервисной платформы 
 
 **Шлюз:** реестр микросервисов; маршруты импортируются из OpenAPI каждого сервиса (`x-unauthenticated`, `x-permission`), по умолчанию всё закрыто; проксируются только зарегистрированные маршруты; личность передаётся заголовками `X-User*` и внутренним ключом, заголовки клиента копируются по белому списку (подделать личность нельзя), токен пользователя вниз не уходит; тело передаётся без изменений (подпись вебхука сохраняется).
 
-**Архитектура:** Controller → FormRequest → DTO → Action → контракт → репозиторий/адаптер. Event `OtpIssued` → listener → зашифрованный Job. SOLID: отдельные классы на сопоставление, разбор, проксирование (SRP), новый способ входа — новый grant (OCP), зависимости на интерфейсы (DIP).
+**Архитектура:** Controller → FormRequest → Command → Handler → контракт → репозиторий/адаптер. Event `OtpIssued` → listener → зашифрованный Job. SOLID: отдельные классы на сопоставление, разбор, проксирование (SRP), новый способ входа — новый grant (OCP), зависимости на интерфейсы (DIP).
 
 **Запуск всей платформы** (три репозитория рядом): `./scripts/platform-up.sh`, затем `./scripts/smoke.sh` — сквозной сценарий «OTP → заказ → оплата → письма». Проверки: `composer test`, `composer analyse`, `composer lint`.

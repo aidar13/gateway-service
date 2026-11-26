@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace App\Providers;
 
-use App\Actions\Auth\VerifyOtp;
 use App\Auth\OtpGrant;
 use App\Auth\OtpSettings;
 use App\Auth\RandomCodeGenerator;
 use App\Contracts\CodeGenerator;
+use App\Contracts\CommandBus;
 use App\Contracts\NotificationClient;
 use App\Contracts\OpenApiFetcher;
 use App\Contracts\OtpRepository;
@@ -90,7 +90,7 @@ final class AppServiceProvider extends ServiceProvider
 
         $this->app->afterResolving(AuthorizationServer::class, function (AuthorizationServer $server) use ($accessTtl, $refreshTtl): void {
             $grant = new OtpGrant(
-                $this->app->make(VerifyOtp::class),
+                $this->app->make(CommandBus::class),
                 $this->app->make(RefreshTokenRepository::class),
             );
             $grant->setRefreshTokenTTL($refreshTtl);

@@ -4,8 +4,9 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Api;
 
-use App\Actions\Auth\IssueOtp;
-use App\Actions\Auth\ResendOtp;
+use App\Commands\Auth\IssueOtpCommand;
+use App\Commands\Auth\ResendOtpCommand;
+use App\Contracts\CommandBus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\OtpRequest;
 use App\Http\Requests\RepeatOtpRequest;
@@ -15,6 +16,8 @@ use OpenApi\Attributes as OA;
 
 final class OtpController extends Controller
 {
+    public function __construct(private readonly CommandBus $bus) {}
+
     #[OA\Post(
         path: '/api/auth/code',
         summary: 'Send a one-time code to a phone or e-mail (exactly one of them)',
@@ -29,9 +32,9 @@ final class OtpController extends Controller
             new OA\Response(response: 429, description: 'Cooldown or rate limit'),
         ],
     )]
-    public function store(OtpRequest $request, IssueOtp $action): JsonResponse
+    public function store(OtpRequest $request): JsonResponse
     {
-        return (new OtpResource($action->execute($request->destination())))->response()->setStatusCode(201);
+        return (new OtpResource($this->bus->dispatch(new IssueOtpCommand($request->destination()))))->response()->setStatusCode(201);
     }
 
     #[OA\Post(
@@ -47,8 +50,8 @@ final class OtpController extends Controller
             new OA\Response(response: 429, description: 'Cooldown or resend limit'),
         ],
     )]
-    public function repeat(RepeatOtpRequest $request, ResendOtp $action): OtpResource
+    public function repeat(RepeatOtpRequest $request): OtpResource
     {
-        return new OtpResource($action->execute($request->otpHash()));
+        return new OtpResource($this->bus->dispatch(new ResendOtpCommand($request->otpHash())));
     }
 }

@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace App\Console\Commands;
 
-use App\Actions\Gateway\ImportRoutes;
+use App\Commands\Gateway\ImportServiceRoutesCommand;
+use App\Contracts\CommandBus;
 use App\Contracts\ServiceRepository;
 use Illuminate\Console\Command;
 use Throwable;
@@ -15,7 +16,7 @@ final class ImportRoutesCommand extends Command
 
     protected $description = 'Import routes from the OpenAPI documents of registered services';
 
-    public function handle(ServiceRepository $services, ImportRoutes $import): int
+    public function handle(ServiceRepository $services, CommandBus $bus): int
     {
         $name = $this->argument('service');
         $targets = $services->all()->filter(static fn ($s): bool => $name === null || $s->name === $name);
@@ -29,7 +30,8 @@ final class ImportRoutesCommand extends Command
         $failed = false;
         foreach ($targets as $service) {
             try {
-                $this->info("{$service->name}: {$import->execute($service)} routes");
+                $count = $bus->dispatch(new ImportServiceRoutesCommand($service));
+                $this->info("{$service->name}: {$count} routes");
             } catch (Throwable $e) {
                 $failed = true;
                 $this->error("{$service->name}: {$e->getMessage()}");

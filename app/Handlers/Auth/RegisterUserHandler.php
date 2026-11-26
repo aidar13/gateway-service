@@ -2,18 +2,20 @@
 
 declare(strict_types=1);
 
-namespace App\Actions\Auth;
+namespace App\Handlers\Auth;
 
+use App\Commands\Auth\RegisterUserCommand;
 use App\Contracts\UserRepository;
-use App\DTO\RegisterUserData;
 use App\Models\User;
 
-final class RegisterUser
+final class RegisterUserHandler
 {
     public function __construct(private readonly UserRepository $users) {}
 
-    public function execute(RegisterUserData $data): User
+    public function handle(RegisterUserCommand $command): User
     {
+        $data = $command->data;
+
         $user = $this->users->create($data);
         $user->assignRole('client');
 

@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace App\Auth;
 
-use App\Actions\Auth\VerifyOtp;
+use App\Commands\Auth\VerifyOtpCommand;
+use App\Contracts\CommandBus;
 use DateInterval;
 use League\OAuth2\Server\Exception\OAuthServerException;
 use League\OAuth2\Server\Grant\AbstractGrant;
@@ -21,7 +22,7 @@ final class OtpGrant extends AbstractGrant
     public const IDENTIFIER = 'hash_and_code';
 
     public function __construct(
-        private readonly VerifyOtp $verifyOtp,
+        private readonly CommandBus $bus,
         RefreshTokenRepositoryInterface $refreshTokenRepository,
     ) {
         $this->setRefreshTokenRepository($refreshTokenRepository);
@@ -51,7 +52,7 @@ final class OtpGrant extends AbstractGrant
             throw OAuthServerException::invalidRequest('code');
         }
 
-        $user = $this->verifyOtp->execute($hash, $code) ?? throw OAuthServerException::invalidGrant();
+        $user = $this->bus->dispatch(new VerifyOtpCommand($hash, $code)) ?? throw OAuthServerException::invalidGrant();
         $userId = (string) $user->id;
 
         $scopes = $this->scopeRepository->finalizeScopes($scopes, $this->getIdentifier(), $client, $userId);

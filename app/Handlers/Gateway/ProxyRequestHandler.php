@@ -2,8 +2,9 @@
 
 declare(strict_types=1);
 
-namespace App\Actions\Gateway;
+namespace App\Handlers\Gateway;
 
+use App\Commands\Gateway\ProxyRequestCommand;
 use App\Contracts\ServiceRepository;
 use App\Contracts\UpstreamClient;
 use App\Exceptions\ProxyDenied;
@@ -11,11 +12,10 @@ use App\Exceptions\ResourceNotFound;
 use App\Gateway\RouteDefinition;
 use App\Gateway\RouteMatcher;
 use App\Models\User;
-use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
 /** Resolve service → match route → authorise → forward. Unregistered routes are never forwarded. */
-final class ProxyRequest
+final class ProxyRequestHandler
 {
     public function __construct(
         private readonly ServiceRepository $services,
@@ -23,8 +23,13 @@ final class ProxyRequest
         private readonly UpstreamClient $upstream,
     ) {}
 
-    public function execute(string $serviceName, string $path, Request $request, ?User $user): Response
+    public function handle(ProxyRequestCommand $command): Response
     {
+        $serviceName = $command->serviceName;
+        $path = $command->path;
+        $request = $command->request;
+        $user = $command->user;
+
         $service = $this->services->findActiveByName($serviceName)
             ?? throw ResourceNotFound::make('Service');
 

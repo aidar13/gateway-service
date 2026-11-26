@@ -2,10 +2,11 @@
 
 declare(strict_types=1);
 
-namespace App\Actions\Auth;
+namespace App\Handlers\Auth;
 
 use App\Auth\OtpSettings;
 use App\Auth\TokenRevoker;
+use App\Commands\Auth\VerifyOtpCommand;
 use App\Contracts\OtpRepository;
 use App\Contracts\UserRepository;
 use App\DTO\OtpDestination;
@@ -16,7 +17,7 @@ use Illuminate\Contracts\Hashing\Hasher;
  * Exchanges (hash, code) for a user. The account is created only now, after the person
  * has proved they own the phone/e-mail — requesting a code never creates anything.
  */
-final class VerifyOtp
+final class VerifyOtpHandler
 {
     public function __construct(
         private readonly OtpRepository $codes,
@@ -27,8 +28,11 @@ final class VerifyOtp
     ) {}
 
     /** @return User|null null when the code is wrong, expired, used up or the account is disabled */
-    public function execute(string $hash, string $code): ?User
+    public function handle(VerifyOtpCommand $command): ?User
     {
+        $hash = $command->hash;
+        $code = $command->code;
+
         $otp = $this->codes->findByHash($hash);
 
         if ($otp === null || ! $otp->isUsable($this->settings->maxAttempts)) {
