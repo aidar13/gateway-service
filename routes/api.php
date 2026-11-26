@@ -34,7 +34,7 @@ Route::prefix('admin')
     ->middleware(['auth:api', EnsureUserIsActive::class])
     ->where(['id' => '[0-9]+', 'serviceId' => '[0-9]+', 'routeId' => '[0-9]+'])
     ->group(function (): void {
-        $can = static fn (SystemPermission $permission): string => 'permission:'.$permission->value;
+        $can = static fn(SystemPermission $permission): string => 'permission:' . $permission->value;
 
         Route::apiResource('services', ServiceController::class)->parameters(['services' => 'id'])
             ->middlewareFor(['index', 'show'], $can(SystemPermission::ServicesView))

@@ -11,18 +11,19 @@ use App\Exceptions\ProtectedResource;
 use App\Exceptions\ResourceNotFound;
 use App\Models\User;
 
-final class AssignRolesHandler
+final readonly class AssignRolesHandler
 {
     public function __construct(
-        private readonly UserRepository $users,
-    ) {}
+        private UserRepository $users,
+    ) {
+    }
 
     public function handle(AssignRolesCommand $command): User
     {
-        $user = $this->users->find($command->userId) ?? throw ResourceNotFound::make('User');
+        $user  = $this->users->find($command->userId) ?? throw ResourceNotFound::make('User');
         $admin = SystemRole::Admin->value;
 
-        if ($user->hasRole($admin) && ! in_array($admin, $command->roles, true)
+        if ($user->hasRole($admin) && !in_array($admin, $command->roles, true)
             && $this->users->countActiveWithRole($admin) <= 1) {
             throw ProtectedResource::because('The last active administrator cannot lose the admin role.');
         }

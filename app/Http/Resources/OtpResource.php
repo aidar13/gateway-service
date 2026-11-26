@@ -21,10 +21,10 @@ final class OtpResource extends JsonResource
     public function toArray(Request $request): array
     {
         return [
-            'hash' => $this->hash,
-            'expires_at' => $this->expires_at->toIso8601String(),
+            'hash'                => $this->hash,
+            'expires_at'          => $this->expires_at->toIso8601String(),
             'resend_available_at' => $this->last_sent_at
-                ->addSeconds((int) config('gateway.otp.resend_cooldown_seconds'))
+                ->addSeconds((int)config('gateway.otp.resend_cooldown_seconds'))
                 ->toIso8601String(),
         ];
     }

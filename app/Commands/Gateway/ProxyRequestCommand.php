@@ -17,5 +17,6 @@ final readonly class ProxyRequestCommand implements Command
         public string $path,
         public Request $request,
         public ?User $user,
-    ) {}
+    ) {
+    }
 }

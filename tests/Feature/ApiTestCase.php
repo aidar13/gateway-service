@@ -27,22 +27,22 @@ abstract class ApiTestCase extends TestCase
     }
 
     /**
-     * @param  array<string, string>  $params
+     * @param array<string, string> $params
      * @return TestResponse<Response>
      */
     protected function token(string $grant, array $params): TestResponse
     {
         return $this->postJson('/oauth/token', [
-            'grant_type' => $grant,
-            'client_id' => (string) $this->oauth->getKey(),
-            'client_secret' => (string) $this->oauth->plainSecret,
+            'grant_type'    => $grant,
+            'client_id'     => (string)$this->oauth->getKey(),
+            'client_secret' => (string)$this->oauth->plainSecret,
             ...$params,
         ]);
     }
 
     protected function accessTokenFor(User $user): string
     {
-        return (string) $this->token('password', ['username' => (string) $user->username, 'password' => 'password-123'])
+        return (string)$this->token('password', ['username' => (string)$user->username, 'password' => 'password-123'])
             ->assertOk()
             ->json('access_token');
     }

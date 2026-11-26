@@ -45,14 +45,14 @@ final class RegistryAndProxyTest extends ApiTestCase
     {
         Http::fake(['billing.test/*' => Http::response([
             'openapi' => '3.0.0',
-            'paths' => [
+            'paths'   => [
                 '/api/invoices' => ['get' => ['summary' => 'List'], 'post' => ['x-permission' => 'services.view']],
-                '/api/health' => ['get' => ['x-unauthenticated' => true]],
+                '/api/health'   => ['get' => ['x-unauthenticated' => true]],
             ],
         ])]);
         $this->freshAuth($this->accessTokenFor($this->admin()));
 
-        $id = (int) $this->postJson('/api/admin/services', ['name' => 'billing', 'base_url' => 'http://billing.test'])
+        $id = (int)$this->postJson('/api/admin/services', ['name' => 'billing', 'base_url' => 'http://billing.test'])
             ->assertCreated()->json('data.id');
 
         $this->postJson("/api/admin/services/{$id}/import-routes")->assertOk()->assertJsonCount(3, 'data.routes');
@@ -90,12 +90,12 @@ final class RegistryAndProxyTest extends ApiTestCase
             ->assertOk()
             ->assertJsonPath('data.id', 5);
 
-        Http::assertSent(fn (Request $r) => $r->url() === 'http://orders.test/api/orders/5?expand=items'
-            && $r->header('X-User') === [(string) $user->id]
-            && $r->header('X-User-Email') === [(string) $user->email]
+        Http::assertSent(fn(Request $r) => $r->url() === 'http://orders.test/api/orders/5?expand=items'
+            && $r->header('X-User') === [(string)$user->id]
+            && $r->header('X-User-Email') === [(string)$user->email]
             && $r->header('X-Api-Key') === ['internal-key']
-            && ! $r->hasHeader('X-Evil')
-            && ! $r->hasHeader('Authorization'));
+            && !$r->hasHeader('X-Evil')
+            && !$r->hasHeader('Authorization'));
     }
 
     public function test_public_route_passes_raw_body_and_signature_untouched(): void
@@ -107,9 +107,9 @@ final class RegistryAndProxyTest extends ApiTestCase
             'CONTENT_TYPE' => 'application/json', 'HTTP_X_SIGNATURE' => 'abc', 'HTTP_X_USER' => '1',
         ], $body)->assertOk();
 
-        Http::assertSent(fn (Request $r) => $r->body() === $body
+        Http::assertSent(fn(Request $r) => $r->body() === $body
             && $r->header('X-Signature') === ['abc']
-            && ! $r->hasHeader('X-User'));
+            && !$r->hasHeader('X-User'));
     }
 
     public function test_permission_protected_route(): void
@@ -142,7 +142,7 @@ final class RegistryAndProxyTest extends ApiTestCase
 
         $this->app->forgetInstance(Factory::class);
         Http::clearResolvedInstances();
-        Http::fake(fn () => throw new ConnectionException('refused'));
+        Http::fake(fn() => throw new ConnectionException('refused'));
         $this->postJson('/gateway/orders/api/payments/webhook', ['a' => 1])->assertStatus(502);
     }
 
@@ -154,6 +154,6 @@ final class RegistryAndProxyTest extends ApiTestCase
             ->getJson('/gateway/orders/api/orders/5%3Fadmin%23x')
             ->assertOk();
 
-        Http::assertSent(fn (Request $r) => $r->url() === 'http://orders.test/api/orders/5%3Fadmin%23x');
+        Http::assertSent(fn(Request $r) => $r->url() === 'http://orders.test/api/orders/5%3Fadmin%23x');
     }
 }

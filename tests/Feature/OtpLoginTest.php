@@ -25,7 +25,7 @@ final class OtpLoginTest extends ApiTestCase
 
     private function requestCode(string $phone = self::PHONE): string
     {
-        return (string) $this->postJson('/api/auth/code', ['phone' => $phone])->assertCreated()->json('data.hash');
+        return (string)$this->postJson('/api/auth/code', ['phone' => $phone])->assertCreated()->json('data.hash');
     }
 
     public function test_requesting_a_code_stores_only_a_hash_and_creates_no_account(): void
@@ -57,7 +57,7 @@ final class OtpLoginTest extends ApiTestCase
     public function test_existing_user_is_reused(): void
     {
         $user = User::factory()->create(['email' => 'kim@example.test']);
-        $hash = (string) $this->postJson('/api/auth/code', ['email' => 'KIM@example.test'])->json('data.hash');
+        $hash = (string)$this->postJson('/api/auth/code', ['email' => 'KIM@example.test'])->json('data.hash');
 
         $this->token('hash_and_code', ['hash' => $hash, 'code' => '123456'])->assertOk();
 
@@ -134,7 +134,7 @@ final class OtpLoginTest extends ApiTestCase
 
         $this->requestCode();
 
-        Http::assertSent(fn ($request) => $request->url() === 'http://notifications.test/api/notifications'
+        Http::assertSent(fn($request) => $request->url() === 'http://notifications.test/api/notifications'
             && $request->hasHeader('X-Api-Key', 'n-key')
             && $request['event'] === 'auth.otp'
             && $request['recipient'] === ['phone' => self::PHONE]
@@ -144,7 +144,7 @@ final class OtpLoginTest extends ApiTestCase
     public function test_auth_endpoints_are_rate_limited(): void
     {
         foreach (range(1, 10) as $i) {
-            $this->postJson('/api/auth/code', ['phone' => '+1555000000'.$i]);
+            $this->postJson('/api/auth/code', ['phone' => '+1555000000' . $i]);
         }
 
         $this->postJson('/api/auth/code', ['phone' => '+15550001111'])->assertStatus(429);
@@ -154,10 +154,10 @@ final class OtpLoginTest extends ApiTestCase
     {
         // Someone registers with a phone that is not theirs and keeps a session.
         $this->postJson('/api/auth/register', [
-            'name' => 'Mallory', 'username' => 'mallory', 'email' => 'mallory@example.test',
+            'name'  => 'Mallory', 'username' => 'mallory', 'email' => 'mallory@example.test',
             'phone' => self::PHONE, 'password' => 'password-123',
         ])->assertCreated();
-        $stolen = (string) $this->token('password', ['username' => 'mallory', 'password' => 'password-123'])->json('access_token');
+        $stolen = (string)$this->token('password', ['username' => 'mallory', 'password' => 'password-123'])->json('access_token');
 
         $hash = $this->requestCode();
         $this->token('hash_and_code', ['hash' => $hash, 'code' => '123456'])->assertOk();
@@ -171,7 +171,7 @@ final class OtpLoginTest extends ApiTestCase
 
     public function test_second_code_sign_in_changes_nothing(): void
     {
-        $first = (string) $this->token('hash_and_code', ['hash' => $this->requestCode(), 'code' => '123456'])->json('access_token');
+        $first = (string)$this->token('hash_and_code', ['hash' => $this->requestCode(), 'code' => '123456'])->json('access_token');
 
         $this->token('hash_and_code', ['hash' => $this->requestCode(), 'code' => '123456'])->assertOk();
 

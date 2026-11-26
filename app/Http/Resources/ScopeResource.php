@@ -24,15 +24,15 @@ final class ScopeResource extends JsonResource
     public function toArray(Request $request): array
     {
         return [
-            'id' => $this->id,
-            'name' => $this->name,
-            'description' => $this->description,
-            'is_active' => $this->is_active,
+            'id'             => $this->id,
+            'name'           => $this->name,
+            'description'    => $this->description,
+            'is_active'      => $this->is_active,
             'services_count' => $this->whenCounted('services'),
-            'routes_count' => $this->whenCounted('routes'),
-            'clients_count' => $this->whenCounted('clients'),
-            'services' => ServiceResource::collection($this->whenLoaded('services')),
-            'routes' => ServiceRouteResource::collection($this->whenLoaded('routes')),
+            'routes_count'   => $this->whenCounted('routes'),
+            'clients_count'  => $this->whenCounted('clients'),
+            'services'       => ServiceResource::collection($this->whenLoaded('services')),
+            'routes'         => ServiceRouteResource::collection($this->whenLoaded('routes')),
         ];
     }
 }

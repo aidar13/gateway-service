@@ -11,5 +11,6 @@ final readonly class DeletePermissionCommand implements Command
 {
     public function __construct(
         public int $permissionId,
-    ) {}
+    ) {
+    }
 }

@@ -18,10 +18,10 @@ final class EloquentServiceRepository implements ServiceRepository
     public function create(string $name, string $baseUrl, string $openApiPath): Microservice
     {
         return Microservice::query()->create([
-            'name' => $name,
-            'base_url' => $baseUrl,
+            'name'         => $name,
+            'base_url'     => $baseUrl,
             'openapi_path' => $openApiPath,
-            'is_active' => true,
+            'is_active'    => true,
         ]);
     }
 
@@ -50,8 +50,8 @@ final class EloquentServiceRepository implements ServiceRepository
     public function paginateRoutes(?int $serviceId, ?string $search, int $perPage): LengthAwarePaginator
     {
         return ServiceRoute::query()
-            ->when($serviceId, fn ($q, int $id) => $q->where('microservice_id', $id))
-            ->when($search, fn ($q, string $term) => $q->where('path', 'like', '%'.$term.'%'))
+            ->when($serviceId, fn($q, int $id) => $q->where('microservice_id', $id))
+            ->when($search, fn($q, string $term) => $q->where('path', 'like', '%' . $term . '%'))
             ->orderBy('microservice_id')
             ->orderBy('path')
             ->orderBy('method')
@@ -78,8 +78,8 @@ final class EloquentServiceRepository implements ServiceRepository
                     ['method' => $route->method, 'path' => $route->path],
                     [
                         'requires_auth' => $route->requiresAuth,
-                        'permission' => $route->permission,
-                        'summary' => $route->summary,
+                        'permission'    => $route->permission,
+                        'summary'       => $route->summary,
                     ],
                 )->getKey();
             }
@@ -92,7 +92,7 @@ final class EloquentServiceRepository implements ServiceRepository
 
     public function routeDefinitions(Microservice $service): array
     {
-        return array_values($service->routes->map(static fn (ServiceRoute $r): RouteDefinition => new RouteDefinition(
+        return array_values($service->routes->map(static fn(ServiceRoute $r): RouteDefinition => new RouteDefinition(
             $r->method,
             $r->path,
             $r->requires_auth,

@@ -17,7 +17,8 @@ final class ScopeBindingController extends Controller
 {
     public function __construct(
         private readonly CommandBus $bus,
-    ) {}
+    ) {
+    }
 
     #[OA\Put(
         path: '/api/admin/scopes/{id}/services/{serviceId}',

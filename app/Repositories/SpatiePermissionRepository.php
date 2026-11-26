@@ -28,7 +28,7 @@ final class SpatiePermissionRepository implements PermissionRepository
     {
         $permission = Permission::create(['name' => $name, 'guard_name' => self::GUARD]);
 
-        return $this->get((int) $permission->getKey());
+        return $this->get((int)$permission->getKey());
     }
 
     public function rename(Permission $permission, string $name): Permission

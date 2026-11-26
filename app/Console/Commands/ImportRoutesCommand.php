@@ -18,8 +18,8 @@ final class ImportRoutesCommand extends Command
 
     public function handle(ServiceRepository $services, CommandBus $bus): int
     {
-        $name = $this->argument('service');
-        $targets = $services->all()->filter(static fn ($s): bool => $name === null || $s->name === $name);
+        $name    = $this->argument('service');
+        $targets = $services->all()->filter(static fn($s): bool => $name === null || $s->name === $name);
 
         if ($targets->isEmpty()) {
             $this->error('No matching services.');

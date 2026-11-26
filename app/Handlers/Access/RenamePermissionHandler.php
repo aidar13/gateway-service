@@ -10,11 +10,12 @@ use App\Enums\SystemPermission;
 use App\Exceptions\ProtectedResource;
 use Spatie\Permission\Models\Permission;
 
-final class RenamePermissionHandler
+final readonly class RenamePermissionHandler
 {
     public function __construct(
-        private readonly PermissionRepository $permissions,
-    ) {}
+        private PermissionRepository $permissions,
+    ) {
+    }
 
     public function handle(RenamePermissionCommand $command): Permission
     {

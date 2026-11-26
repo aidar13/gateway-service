@@ -11,5 +11,6 @@ final readonly class OtpSettings
         public int $maxAttempts,
         public int $resendCooldownSeconds,
         public int $maxResends,
-    ) {}
+    ) {
+    }
 }

@@ -4,16 +4,17 @@ declare(strict_types=1);
 
 namespace App\Events;
 
-use App\DTO\OtpDestination;
+use App\DTO\OtpDestinationDTO;
 use Illuminate\Foundation\Events\Dispatchable;
 
-final class OtpIssued
+final class OtpIssuedEvent
 {
     use Dispatchable;
 
     public function __construct(
-        public readonly OtpDestination $destination,
+        public readonly OtpDestinationDTO $destination,
         public readonly string $code,
         public readonly int $ttlMinutes,
-    ) {}
+    ) {
+    }
 }

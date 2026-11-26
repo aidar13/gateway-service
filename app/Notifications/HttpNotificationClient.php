@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Notifications;
 
 use App\Contracts\NotificationClient;
-use App\DTO\OtpDestination;
+use App\DTO\OtpDestinationDTO;
 use App\Enums\OtpChannel;
 use Illuminate\Http\Client\Factory as Http;
 
@@ -15,12 +15,13 @@ final class HttpNotificationClient implements NotificationClient
         private readonly Http $http,
         private readonly string $baseUrl,
         private readonly string $apiKey,
-    ) {}
+    ) {
+    }
 
-    public function sendOtp(OtpDestination $destination, string $code, int $ttlMinutes): void
+    public function sendOtp(OtpDestinationDTO $destination, string $code, int $ttlMinutes): void
     {
         $recipient = match ($destination->channel) {
-            OtpChannel::Sms => ['phone' => $destination->value],
+            OtpChannel::Sms   => ['phone' => $destination->value],
             OtpChannel::Email => ['email' => $destination->value],
         };
 
@@ -28,10 +29,10 @@ final class HttpNotificationClient implements NotificationClient
             ->withHeaders(['X-Api-Key' => $this->apiKey])
             ->timeout(5)
             ->acceptJson()
-            ->post(rtrim($this->baseUrl, '/').'/api/notifications', [
-                'event' => 'auth.otp',
+            ->post(rtrim($this->baseUrl, '/') . '/api/notifications', [
+                'event'     => 'auth.otp',
                 'recipient' => $recipient,
-                'payload' => ['code' => $code, 'ttl_minutes' => $ttlMinutes],
+                'payload'   => ['code' => $code, 'ttl_minutes' => $ttlMinutes],
             ])
             ->throw();
     }

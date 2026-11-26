@@ -16,5 +16,6 @@ final readonly class RevokeClientCommand implements Command
     public function __construct(
         public int $clientId,
         public ?int $currentClientId,
-    ) {}
+    ) {
+    }
 }

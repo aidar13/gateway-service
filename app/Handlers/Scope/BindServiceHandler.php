@@ -9,12 +9,13 @@ use App\Contracts\ScopeRepository;
 use App\Contracts\ServiceRepository;
 use App\Models\AccessScope;
 
-final class BindServiceHandler
+final readonly class BindServiceHandler
 {
     public function __construct(
-        private readonly ScopeRepository $scopes,
-        private readonly ServiceRepository $services,
-    ) {}
+        private ScopeRepository $scopes,
+        private ServiceRepository $services,
+    ) {
+    }
 
     public function handle(BindServiceCommand $command): AccessScope
     {

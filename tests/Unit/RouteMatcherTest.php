@@ -25,13 +25,13 @@ final class RouteMatcherTest extends TestCase
     public static function cases(): array
     {
         return [
-            'parameter' => ['GET', '/api/orders/42', '/api/orders/{id}'],
+            'parameter'                   => ['GET', '/api/orders/42', '/api/orders/{id}'],
             'literal wins over parameter' => ['GET', '/api/orders/summary', '/api/orders/summary'],
-            'nested' => ['post', '/api/orders/42/pay', '/api/orders/{id}/pay'],
-            'wrong method' => ['DELETE', '/api/orders/42', null],
-            'extra segment' => ['GET', '/api/orders/42/secret', null],
-            'dot segment' => ['GET', '/api/orders/..', null],
-            'encoded dot segment' => ['GET', '/api/orders/%2e%2e', null],
+            'nested'                      => ['post', '/api/orders/42/pay', '/api/orders/{id}/pay'],
+            'wrong method'                => ['DELETE', '/api/orders/42', null],
+            'extra segment'               => ['GET', '/api/orders/42/secret', null],
+            'dot segment'                 => ['GET', '/api/orders/..', null],
+            'encoded dot segment'         => ['GET', '/api/orders/%2e%2e', null],
         ];
     }
 

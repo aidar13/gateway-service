@@ -8,7 +8,9 @@ use App\Contracts\CodeGenerator;
 
 final class FixedCodeGenerator implements CodeGenerator
 {
-    public function __construct(public string $code = '123456') {}
+    public function __construct(public string $code = '123456')
+    {
+    }
 
     public function generate(): string
     {

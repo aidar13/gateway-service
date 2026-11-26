@@ -8,11 +8,12 @@ use App\Commands\Scope\CreateScopeCommand;
 use App\Contracts\ScopeRepository;
 use App\Models\AccessScope;
 
-final class CreateScopeHandler
+final readonly class CreateScopeHandler
 {
     public function __construct(
-        private readonly ScopeRepository $scopes,
-    ) {}
+        private ScopeRepository $scopes,
+    ) {
+    }
 
     public function handle(CreateScopeCommand $command): AccessScope
     {

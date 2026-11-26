@@ -8,11 +8,12 @@ use App\Commands\Scope\UpdateScopeCommand;
 use App\Contracts\ScopeRepository;
 use App\Models\AccessScope;
 
-final class UpdateScopeHandler
+final readonly class UpdateScopeHandler
 {
     public function __construct(
-        private readonly ScopeRepository $scopes,
-    ) {}
+        private ScopeRepository $scopes,
+    ) {
+    }
 
     public function handle(UpdateScopeCommand $command): AccessScope
     {

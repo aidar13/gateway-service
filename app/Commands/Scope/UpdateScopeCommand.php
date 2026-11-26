@@ -18,5 +18,6 @@ final readonly class UpdateScopeCommand implements Command
     public function __construct(
         public int $scopeId,
         public array $changes,
-    ) {}
+    ) {
+    }
 }

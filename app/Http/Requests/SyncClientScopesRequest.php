@@ -12,7 +12,7 @@ final class SyncClientScopesRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'scope_ids' => ['present', 'array'],
+            'scope_ids'   => ['present', 'array'],
             'scope_ids.*' => ['integer', 'distinct', 'exists:access_scopes,id'],
         ];
     }
@@ -20,6 +20,6 @@ final class SyncClientScopesRequest extends FormRequest
     /** @return list<int> */
     public function scopeIds(): array
     {
-        return array_values(array_map(intval(...), (array) $this->validated('scope_ids', [])));
+        return array_values(array_map(intval(...), (array)$this->validated('scope_ids', [])));
     }
 }

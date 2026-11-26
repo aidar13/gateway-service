@@ -15,10 +15,10 @@ class MicroserviceFactory extends Factory
     public function definition(): array
     {
         return [
-            'name' => fake()->unique()->slug(2),
-            'base_url' => 'http://'.fake()->unique()->domainWord().'.internal',
+            'name'         => fake()->unique()->slug(2),
+            'base_url'     => 'http://' . fake()->unique()->domainWord() . '.internal',
             'openapi_path' => '/api/openapi.json',
-            'is_active' => true,
+            'is_active'    => true,
         ];
     }
 }

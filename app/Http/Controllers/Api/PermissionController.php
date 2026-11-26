@@ -22,7 +22,8 @@ final class PermissionController extends Controller
     public function __construct(
         private readonly PermissionRepository $permissions,
         private readonly CommandBus $bus,
-    ) {}
+    ) {
+    }
 
     #[OA\Get(
         path: '/api/admin/permissions',
@@ -59,7 +60,7 @@ final class PermissionController extends Controller
     )]
     public function store(PermissionRequest $request): JsonResponse
     {
-        $permission = $this->bus->dispatch(new CreatePermissionCommand((string) $request->validated('name')));
+        $permission = $this->bus->dispatch(new CreatePermissionCommand((string)$request->validated('name')));
 
         return (new PermissionResource($permission))->response()->setStatusCode(201);
     }
@@ -76,7 +77,7 @@ final class PermissionController extends Controller
     public function update(int $id, PermissionRequest $request): PermissionResource
     {
         return new PermissionResource($this->bus->dispatch(
-            new RenamePermissionCommand($id, (string) $request->validated('name')),
+            new RenamePermissionCommand($id, (string)$request->validated('name')),
         ));
     }
 

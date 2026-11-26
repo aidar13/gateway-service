@@ -9,7 +9,7 @@ use App\Auth\TokenRevoker;
 use App\Commands\Auth\VerifyOtpCommand;
 use App\Contracts\OtpRepository;
 use App\Contracts\UserRepository;
-use App\DTO\OtpDestination;
+use App\DTO\OtpDestinationDTO;
 use App\Models\User;
 use Illuminate\Contracts\Hashing\Hasher;
 
@@ -17,15 +17,16 @@ use Illuminate\Contracts\Hashing\Hasher;
  * Exchanges (hash, code) for a user. The account is created only now, after the person
  * has proved they own the phone/e-mail — requesting a code never creates anything.
  */
-final class VerifyOtpHandler
+final readonly class VerifyOtpHandler
 {
     public function __construct(
-        private readonly OtpRepository $codes,
-        private readonly UserRepository $users,
-        private readonly Hasher $hasher,
-        private readonly OtpSettings $settings,
-        private readonly TokenRevoker $tokens,
-    ) {}
+        private OtpRepository $codes,
+        private UserRepository $users,
+        private Hasher $hasher,
+        private OtpSettings $settings,
+        private TokenRevoker $tokens,
+    ) {
+    }
 
     /** @return User|null null when the code is wrong, expired, used up or the account is disabled */
     public function handle(VerifyOtpCommand $command): ?User
@@ -35,21 +36,21 @@ final class VerifyOtpHandler
 
         $otp = $this->codes->findByHash($hash);
 
-        if ($otp === null || ! $otp->isUsable($this->settings->maxAttempts)) {
+        if ($otp === null || !$otp->isUsable($this->settings->maxAttempts)) {
             return null;
         }
 
         // Count the attempt before checking, so parallel guesses cannot exceed the budget.
-        if (! $this->codes->registerAttempt($otp, $this->settings->maxAttempts)) {
+        if (!$this->codes->registerAttempt($otp, $this->settings->maxAttempts)) {
             return null;
         }
 
-        if (! $this->hasher->check($code, $otp->code_hash) || ! $this->codes->consume($otp)) {
+        if (!$this->hasher->check($code, $otp->code_hash) || !$this->codes->consume($otp)) {
             return null;
         }
 
-        $destination = new OtpDestination($otp->channel, $otp->destination);
-        $user = $this->users->findByDestination($destination);
+        $destination = new OtpDestinationDTO($otp->channel, $otp->destination);
+        $user        = $this->users->findByDestination($destination);
 
         if ($user === null) {
             $user = $this->users->createFromDestination($destination);
@@ -58,12 +59,12 @@ final class VerifyOtpHandler
             return $user;
         }
 
-        if (! $user->is_active) {
+        if (!$user->is_active) {
             return null;
         }
 
         // Account pre-hijacking guard: somebody may have registered this contact without owning it.
-        if (! $this->users->isVerified($user, $destination->channel)) {
+        if (!$this->users->isVerified($user, $destination->channel)) {
             $this->tokens->revokeAll($user);
             $this->users->claim($user, $destination->channel);
         }

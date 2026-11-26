@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Commands\Auth;
 
 use App\Contracts\Command;
-use App\DTO\OtpDestination;
+use App\DTO\OtpDestinationDTO;
 use App\Models\OtpCode;
 
 /**
@@ -16,6 +16,7 @@ use App\Models\OtpCode;
 final readonly class IssueOtpCommand implements Command
 {
     public function __construct(
-        public OtpDestination $destination,
-    ) {}
+        public OtpDestinationDTO $destination,
+    ) {
+    }
 }

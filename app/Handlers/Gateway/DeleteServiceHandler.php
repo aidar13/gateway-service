@@ -7,11 +7,12 @@ namespace App\Handlers\Gateway;
 use App\Commands\Gateway\DeleteServiceCommand;
 use App\Contracts\ServiceRepository;
 
-final class DeleteServiceHandler
+final readonly class DeleteServiceHandler
 {
     public function __construct(
-        private readonly ServiceRepository $services,
-    ) {}
+        private ServiceRepository $services,
+    ) {
+    }
 
     public function handle(DeleteServiceCommand $command): void
     {

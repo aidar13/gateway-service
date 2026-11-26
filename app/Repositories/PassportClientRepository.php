@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Repositories;
 
 use App\Contracts\OAuthClientRepository;
-use App\DTO\NewClient;
+use App\DTO\NewClientDTO;
 use App\Exceptions\ResourceNotFound;
 use App\Models\OAuthClient;
 use Illuminate\Database\Eloquent\Collection;
@@ -13,7 +13,9 @@ use Laravel\Passport\ClientRepository;
 
 final class PassportClientRepository implements OAuthClientRepository
 {
-    public function __construct(private readonly ClientRepository $passport) {}
+    public function __construct(private readonly ClientRepository $passport)
+    {
+    }
 
     public function all(): Collection
     {
@@ -26,12 +28,12 @@ final class PassportClientRepository implements OAuthClientRepository
             ?? throw ResourceNotFound::make('Client');
     }
 
-    public function createPasswordClient(string $name): NewClient
+    public function createPasswordClient(string $name): NewClientDTO
     {
         $created = $this->passport->createPasswordGrantClient(null, $name, 'http://localhost');
-        $secret = (string) $created->plainSecret;
+        $secret  = (string)$created->plainSecret;
 
-        return new NewClient($this->get((int) $created->getKey()), $secret);
+        return new NewClientDTO($this->get((int)$created->getKey()), $secret);
     }
 
     public function syncScopes(OAuthClient $client, array $scopeIds): void

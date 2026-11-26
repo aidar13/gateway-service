@@ -42,7 +42,7 @@ interface ServiceRepository
     /**
      * Makes the stored routes equal to the given list. Routes that stay keep their id (and scope bindings).
      *
-     * @param  list<RouteDefinition>  $routes
+     * @param list<RouteDefinition> $routes
      */
     public function syncRoutes(Microservice $service, array $routes): void;
 

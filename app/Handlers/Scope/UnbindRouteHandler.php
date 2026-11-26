@@ -9,12 +9,13 @@ use App\Contracts\ScopeRepository;
 use App\Contracts\ServiceRepository;
 use App\Models\AccessScope;
 
-final class UnbindRouteHandler
+final readonly class UnbindRouteHandler
 {
     public function __construct(
-        private readonly ScopeRepository $scopes,
-        private readonly ServiceRepository $services,
-    ) {}
+        private ScopeRepository $scopes,
+        private ServiceRepository $services,
+    ) {
+    }
 
     public function handle(UnbindRouteCommand $command): AccessScope
     {

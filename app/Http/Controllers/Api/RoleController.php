@@ -23,7 +23,8 @@ final class RoleController extends Controller
     public function __construct(
         private readonly RoleRepository $roles,
         private readonly CommandBus $bus,
-    ) {}
+    ) {
+    }
 
     #[OA\Get(
         path: '/api/admin/roles',
@@ -61,7 +62,7 @@ final class RoleController extends Controller
     public function store(StoreRoleRequest $request): JsonResponse
     {
         $role = $this->bus->dispatch(new CreateRoleCommand(
-            (string) $request->validated('name'),
+            (string)$request->validated('name'),
             $request->permissionNames() ?? [],
         ));
 

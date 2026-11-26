@@ -8,11 +8,12 @@ use App\Commands\Access\CreateRoleCommand;
 use App\Contracts\RoleRepository;
 use Spatie\Permission\Models\Role;
 
-final class CreateRoleHandler
+final readonly class CreateRoleHandler
 {
     public function __construct(
-        private readonly RoleRepository $roles,
-    ) {}
+        private RoleRepository $roles,
+    ) {
+    }
 
     public function handle(CreateRoleCommand $command): Role
     {

@@ -16,6 +16,6 @@ final class RepeatOtpRequest extends FormRequest
 
     public function otpHash(): string
     {
-        return (string) $this->validated('hash');
+        return (string)$this->validated('hash');
     }
 }

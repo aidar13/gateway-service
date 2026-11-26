@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Jobs;
 
 use App\Contracts\NotificationClient;
-use App\DTO\OtpDestination;
+use App\DTO\OtpDestinationDTO;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldBeEncrypted;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -24,7 +24,7 @@ final class DeliverOtp implements ShouldBeEncrypted, ShouldQueue
     public int $backoff = 5;
 
     public function __construct(
-        public readonly OtpDestination $destination,
+        public readonly OtpDestinationDTO $destination,
         private readonly string $code,
         private readonly int $ttlMinutes,
     ) {

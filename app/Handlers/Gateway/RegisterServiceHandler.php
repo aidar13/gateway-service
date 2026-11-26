@@ -8,9 +8,11 @@ use App\Commands\Gateway\RegisterServiceCommand;
 use App\Contracts\ServiceRepository;
 use App\Models\Microservice;
 
-final class RegisterServiceHandler
+final readonly class RegisterServiceHandler
 {
-    public function __construct(private readonly ServiceRepository $services) {}
+    public function __construct(private ServiceRepository $services)
+    {
+    }
 
     public function handle(RegisterServiceCommand $command): Microservice
     {

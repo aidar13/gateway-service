@@ -24,7 +24,8 @@ final class ServiceController extends Controller
     public function __construct(
         private readonly ServiceRepository $services,
         private readonly CommandBus $bus,
-    ) {}
+    ) {
+    }
 
     #[OA\Get(
         path: '/api/admin/services',
@@ -49,9 +50,9 @@ final class ServiceController extends Controller
     public function store(StoreServiceRequest $request): JsonResponse
     {
         $service = $this->bus->dispatch(new RegisterServiceCommand(
-            (string) $request->validated('name'),
-            (string) $request->validated('base_url'),
-            (string) $request->validated('openapi_path', '/api/openapi.json'),
+            (string)$request->validated('name'),
+            (string)$request->validated('base_url'),
+            (string)$request->validated('openapi_path', '/api/openapi.json'),
         ));
 
         return (new ServiceResource($service))->response()->setStatusCode(201);

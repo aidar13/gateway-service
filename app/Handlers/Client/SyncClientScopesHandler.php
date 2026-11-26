@@ -8,11 +8,12 @@ use App\Commands\Client\SyncClientScopesCommand;
 use App\Contracts\OAuthClientRepository;
 use App\Models\OAuthClient;
 
-final class SyncClientScopesHandler
+final readonly class SyncClientScopesHandler
 {
     public function __construct(
-        private readonly OAuthClientRepository $clients,
-    ) {}
+        private OAuthClientRepository $clients,
+    ) {
+    }
 
     public function handle(SyncClientScopesCommand $command): OAuthClient
     {

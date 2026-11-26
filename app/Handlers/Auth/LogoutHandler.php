@@ -8,9 +8,11 @@ use App\Auth\TokenRevoker;
 use App\Commands\Auth\LogoutCommand;
 use Laravel\Passport\Token;
 
-final class LogoutHandler
+final readonly class LogoutHandler
 {
-    public function __construct(private readonly TokenRevoker $tokens) {}
+    public function __construct(private TokenRevoker $tokens)
+    {
+    }
 
     public function handle(LogoutCommand $command): void
     {
@@ -19,7 +21,7 @@ final class LogoutHandler
         $token = $user->token();
 
         if ($token instanceof Token) {
-            $this->tokens->revoke((string) $token->id);
+            $this->tokens->revoke((string)$token->id);
         }
     }
 }

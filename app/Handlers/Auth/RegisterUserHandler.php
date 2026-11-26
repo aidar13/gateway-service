@@ -8,9 +8,11 @@ use App\Commands\Auth\RegisterUserCommand;
 use App\Contracts\UserRepository;
 use App\Models\User;
 
-final class RegisterUserHandler
+final readonly class RegisterUserHandler
 {
-    public function __construct(private readonly UserRepository $users) {}
+    public function __construct(private UserRepository $users)
+    {
+    }
 
     public function handle(RegisterUserCommand $command): User
     {

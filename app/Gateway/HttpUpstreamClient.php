@@ -21,25 +21,26 @@ use Symfony\Component\HttpFoundation\Response;
  * Reverse proxy. Headers are built from scratch: only an allow-list is copied from the
  * caller, so nobody can smuggle `X-User` or the internal key through the gateway.
  */
-final class HttpUpstreamClient implements UpstreamClient
+final readonly class HttpUpstreamClient implements UpstreamClient
 {
     /**
-     * @param  list<string>  $forwardedHeaders
+     * @param list<string> $forwardedHeaders
      */
     public function __construct(
-        private readonly Http $http,
-        private readonly string $internalKey,
-        private readonly array $forwardedHeaders,
-        private readonly int $timeoutSeconds,
-    ) {}
+        private Http $http,
+        private string $internalKey,
+        private array $forwardedHeaders,
+        private int $timeoutSeconds,
+    ) {
+    }
 
     public function forward(Microservice $service, string $path, Request $request, ?User $user): Response
     {
         // Segments are re-encoded so a decoded "?", "#" or "%" cannot change which route is hit downstream.
         $encoded = implode('/', array_map(rawurlencode(...), explode('/', ltrim($path, '/'))));
-        $url = rtrim($service->base_url, '/').'/'.$encoded;
+        $url     = rtrim($service->base_url, '/') . '/' . $encoded;
         if (($query = $request->server->get('QUERY_STRING')) !== null && $query !== '') {
-            $url .= '?'.$query;
+            $url .= '?' . $query;
         }
 
         $pending = $this->http
@@ -65,17 +66,17 @@ final class HttpUpstreamClient implements UpstreamClient
 
         foreach ($this->forwardedHeaders as $name) {
             if ($request->headers->has($name)) {
-                $headers[$name] = (string) $request->headers->get($name);
+                $headers[$name] = (string)$request->headers->get($name);
             }
         }
 
-        $headers['X-Api-Key'] = $this->internalKey;
-        $headers['X-Request-Id'] = (string) Str::uuid();
+        $headers['X-Api-Key']    = $this->internalKey;
+        $headers['X-Request-Id'] = (string)Str::uuid();
 
         if ($user !== null) {
-            $headers['X-User'] = (string) $user->id;
-            $headers['X-User-Email'] = (string) $user->email;
-            $headers['X-User-Phone'] = (string) $user->phone;
+            $headers['X-User']       = (string)$user->id;
+            $headers['X-User-Email'] = (string)$user->email;
+            $headers['X-User-Phone'] = (string)$user->phone;
             $headers['X-User-Roles'] = $user->getRoleNames()->implode(',');
         }
 
@@ -98,13 +99,13 @@ final class HttpUpstreamClient implements UpstreamClient
 
         foreach (Arr::dot($request->allFiles()) as $field => $file) {
             if ($file instanceof UploadedFile) {
-                $pending->attach($this->fieldName((string) $field), (string) $file->get(), $file->getClientOriginalName());
+                $pending->attach($this->fieldName((string)$field), (string)$file->get(), $file->getClientOriginalName());
             }
         }
 
         $parts = [];
         foreach (Arr::dot($request->request->all()) as $field => $value) {
-            $parts[] = ['name' => $this->fieldName((string) $field), 'contents' => is_scalar($value) ? (string) $value : ''];
+            $parts[] = ['name' => $this->fieldName((string)$field), 'contents' => is_scalar($value) ? (string)$value : ''];
         }
 
         return $pending->asMultipart()->withOptions(['multipart' => $parts]);
@@ -114,8 +115,8 @@ final class HttpUpstreamClient implements UpstreamClient
     private function fieldName(string $dotted): string
     {
         $segments = explode('.', $dotted);
-        $first = array_shift($segments);
+        $first    = array_shift($segments);
 
-        return $first.implode('', array_map(static fn (string $s): string => "[{$s}]", $segments));
+        return $first . implode('', array_map(static fn(string $s): string => "[{$s}]", $segments));
     }
 }

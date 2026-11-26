@@ -4,18 +4,18 @@ declare(strict_types=1);
 
 namespace App\Contracts;
 
-use App\DTO\OtpDestination;
+use App\DTO\OtpDestinationDTO;
 use App\Models\OtpCode;
 use Carbon\CarbonImmutable;
 
 interface OtpRepository
 {
-    public function create(OtpDestination $destination, string $codeHash, CarbonImmutable $expiresAt): OtpCode;
+    public function create(OtpDestinationDTO $destination, string $codeHash, CarbonImmutable $expiresAt): OtpCode;
 
     public function findByHash(string $hash): ?OtpCode;
 
     /** Most recently sent, not yet consumed code for the destination. */
-    public function latestFor(OtpDestination $destination): ?OtpCode;
+    public function latestFor(OtpDestinationDTO $destination): ?OtpCode;
 
     public function replaceCode(OtpCode $otp, string $codeHash, CarbonImmutable $expiresAt): void;
 

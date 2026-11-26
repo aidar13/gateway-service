@@ -14,5 +14,6 @@ final readonly class RegisterServiceCommand implements Command
         public string $name,
         public string $baseUrl,
         public string $openApiPath,
-    ) {}
+    ) {
+    }
 }

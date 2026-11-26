@@ -14,5 +14,6 @@ final readonly class SyncClientScopesCommand implements Command
     public function __construct(
         public int $clientId,
         public array $scopeIds,
-    ) {}
+    ) {
+    }
 }

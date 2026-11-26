@@ -15,7 +15,8 @@ final class RouteController extends Controller
 {
     public function __construct(
         private readonly ServiceRepository $services,
-    ) {}
+    ) {
+    }
 
     #[OA\Get(
         path: '/api/admin/routes',

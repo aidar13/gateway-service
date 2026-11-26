@@ -14,9 +14,9 @@ final class OpenApiParserTest extends TestCase
     {
         $routes = (new OpenApiParser)->parse([
             'openapi' => '3.0.0',
-            'paths' => ['/api/things/' => [
-                'get' => [],
-                'post' => ['x-unauthenticated' => true, 'summary' => 'Open'],
+            'paths'   => ['/api/things/' => [
+                'get'        => [],
+                'post'       => ['x-unauthenticated' => true, 'summary' => 'Open'],
                 'parameters' => [],
             ]],
         ]);

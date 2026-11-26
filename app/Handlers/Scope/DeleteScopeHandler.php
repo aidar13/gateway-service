@@ -7,11 +7,12 @@ namespace App\Handlers\Scope;
 use App\Commands\Scope\DeleteScopeCommand;
 use App\Contracts\ScopeRepository;
 
-final class DeleteScopeHandler
+final readonly class DeleteScopeHandler
 {
     public function __construct(
-        private readonly ScopeRepository $scopes,
-    ) {}
+        private ScopeRepository $scopes,
+    ) {
+    }
 
     public function handle(DeleteScopeCommand $command): void
     {

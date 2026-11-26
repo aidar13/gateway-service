@@ -23,9 +23,9 @@ final class RoleResource extends JsonResource
     public function toArray(Request $request): array
     {
         return [
-            'id' => $this->id,
-            'name' => $this->name,
-            'is_system' => SystemRole::tryFrom($this->name) !== null,
+            'id'          => $this->id,
+            'name'        => $this->name,
+            'is_system'   => SystemRole::tryFrom($this->name) !== null,
             'permissions' => $this->permissions->pluck('name')->sort()->values(),
         ];
     }

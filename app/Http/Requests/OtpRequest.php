@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Requests;
 
-use App\DTO\OtpDestination;
+use App\DTO\OtpDestinationDTO;
 use App\Enums\OtpChannel;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Str;
@@ -28,10 +28,10 @@ final class OtpRequest extends FormRequest
         ];
     }
 
-    public function destination(): OtpDestination
+    public function destination(): OtpDestinationDTO
     {
         return $this->filled('phone')
-            ? new OtpDestination(OtpChannel::Sms, (string) $this->validated('phone'))
-            : new OtpDestination(OtpChannel::Email, (string) $this->validated('email'));
+            ? new OtpDestinationDTO(OtpChannel::Sms, (string)$this->validated('phone'))
+            : new OtpDestinationDTO(OtpChannel::Email, (string)$this->validated('email'));
     }
 }

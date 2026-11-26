@@ -12,4 +12,6 @@ use OpenApi\Attributes as OA;
     description: 'Authentication (password and one-time code), RBAC and a reverse proxy in front of the microservices.',
 )]
 #[OA\SecurityScheme(securityScheme: 'Bearer', type: 'http', scheme: 'bearer')]
-abstract class Controller {}
+abstract class Controller
+{
+}

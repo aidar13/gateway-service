@@ -23,18 +23,18 @@ final class ScopeAccessTest extends ApiTestCase
         parent::setUp();
 
         $this->service = Microservice::factory()->create(['name' => 'orders', 'base_url' => 'http://orders.test']);
-        $this->list = $this->service->routes()->create(['method' => 'GET', 'path' => '/api/orders', 'requires_auth' => true]);
-        $this->create = $this->service->routes()->create(['method' => 'POST', 'path' => '/api/orders', 'requires_auth' => true]);
+        $this->list    = $this->service->routes()->create(['method' => 'GET', 'path' => '/api/orders', 'requires_auth' => true]);
+        $this->create  = $this->service->routes()->create(['method' => 'POST', 'path' => '/api/orders', 'requires_auth' => true]);
         $this->service->routes()->create(['method' => 'GET', 'path' => '/api/products', 'requires_auth' => false]);
         Http::fake(['orders.test/*' => Http::response([])]);
     }
 
     private function userToken(?string $scope = null): string
     {
-        $user = User::factory()->create();
-        $params = ['username' => (string) $user->username, 'password' => 'password-123'];
+        $user   = User::factory()->create();
+        $params = ['username' => (string)$user->username, 'password' => 'password-123'];
 
-        return (string) $this->token('password', $scope === null ? $params : $params + ['scope' => $scope])
+        return (string)$this->token('password', $scope === null ? $params : $params + ['scope' => $scope])
             ->assertOk()
             ->json('access_token');
     }
@@ -97,7 +97,7 @@ final class ScopeAccessTest extends ApiTestCase
     {
         $user = User::factory()->create();
 
-        $this->token('password', ['username' => (string) $user->username, 'password' => 'password-123', 'scope' => 'nope'])
+        $this->token('password', ['username' => (string)$user->username, 'password' => 'password-123', 'scope' => 'nope'])
             ->assertStatus(400)
             ->assertJsonPath('error', 'invalid_scope');
     }
@@ -107,9 +107,9 @@ final class ScopeAccessTest extends ApiTestCase
         $token = $this->userToken();
         $this->asAdmin();
 
-        $id = (int) $this->postJson('/api/admin/scopes', ['name' => 'orders', 'description' => 'Order access'])
+        $id = (int)$this->postJson('/api/admin/scopes', ['name' => 'orders', 'description' => 'Order access'])
             ->assertCreated()->json('data.id');
-        $this->putJson('/api/admin/clients/'.$this->oauth->getKey().'/scopes', ['scope_ids' => [$id]])
+        $this->putJson('/api/admin/clients/' . $this->oauth->getKey() . '/scopes', ['scope_ids' => [$id]])
             ->assertOk()->assertJsonPath('data.scopes', ['orders']);
         $this->putJson("/api/admin/scopes/{$id}/routes/{$this->list->id}")->assertOk()->assertJsonCount(1, 'data.routes');
         $this->freshAuth($token)->getJson('/gateway/orders/api/orders')->assertOk();

@@ -35,7 +35,7 @@ final class ServiceManagementTest extends ApiTestCase
             ->push(['openapi' => '3.0.0', 'paths' => ['/api/a' => ['get' => []], '/api/b' => ['get' => []]]])
             ->push(['openapi' => '3.0.0', 'paths' => ['/api/a' => ['get' => ['summary' => 'Kept']], '/api/c' => ['get' => []]]])]);
         $service = Microservice::factory()->create(['base_url' => 'http://billing.test']);
-        $scope = $this->grantScope('web');
+        $scope   = $this->grantScope('web');
         $this->asAdmin();
 
         $this->postJson("/api/admin/services/{$service->id}/import-routes")->assertOk();

@@ -8,6 +8,7 @@ use App\Commands\Auth\VerifyOtpCommand;
 use App\Contracts\CommandBus;
 use DateInterval;
 use League\OAuth2\Server\Exception\OAuthServerException;
+use League\OAuth2\Server\Exception\UniqueTokenIdentifierConstraintViolationException;
 use League\OAuth2\Server\Grant\AbstractGrant;
 use League\OAuth2\Server\Repositories\RefreshTokenRepositoryInterface;
 use League\OAuth2\Server\ResponseTypes\ResponseTypeInterface;
@@ -34,6 +35,10 @@ final class OtpGrant extends AbstractGrant
         return self::IDENTIFIER;
     }
 
+    /**
+     * @throws UniqueTokenIdentifierConstraintViolationException
+     * @throws OAuthServerException
+     */
     public function respondToAccessTokenRequest(
         ServerRequestInterface $request,
         ResponseTypeInterface $responseType,
@@ -43,17 +48,17 @@ final class OtpGrant extends AbstractGrant
         $scopes = $this->validateScopes($this->getRequestParameter('scope', $request, $this->defaultScope));
 
         $hash = $this->getRequestParameter('hash', $request);
-        if (! is_string($hash)) {
+        if (!is_string($hash)) {
             throw OAuthServerException::invalidRequest('hash');
         }
 
         $code = $this->getRequestParameter('code', $request);
-        if (! is_string($code)) {
+        if (!is_string($code)) {
             throw OAuthServerException::invalidRequest('code');
         }
 
-        $user = $this->bus->dispatch(new VerifyOtpCommand($hash, $code)) ?? throw OAuthServerException::invalidGrant();
-        $userId = (string) $user->id;
+        $user   = $this->bus->dispatch(new VerifyOtpCommand($hash, $code)) ?? throw OAuthServerException::invalidGrant();
+        $userId = (string)$user->id;
 
         $scopes = $this->scopeRepository->finalizeScopes($scopes, $this->getIdentifier(), $client, $userId);
 

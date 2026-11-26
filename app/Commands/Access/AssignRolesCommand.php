@@ -14,5 +14,6 @@ final readonly class AssignRolesCommand implements Command
     public function __construct(
         public int $userId,
         public array $roles,
-    ) {}
+    ) {
+    }
 }

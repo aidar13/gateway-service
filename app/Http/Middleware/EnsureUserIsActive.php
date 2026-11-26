@@ -16,7 +16,7 @@ final class EnsureUserIsActive
     {
         $user = $request->user();
 
-        if ($user instanceof User && ! $user->is_active) {
+        if ($user instanceof User && !$user->is_active) {
             return response()->json(['message' => 'Account is disabled.'], 403);
         }
 

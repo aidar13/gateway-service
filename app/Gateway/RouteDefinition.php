@@ -15,5 +15,6 @@ final readonly class RouteDefinition
         public ?string $summary = null,
         /** Id in the registry; null for a route that was only parsed. */
         public ?int $id = null,
-    ) {}
+    ) {
+    }
 }

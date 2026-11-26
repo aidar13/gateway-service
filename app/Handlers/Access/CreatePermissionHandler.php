@@ -8,11 +8,12 @@ use App\Commands\Access\CreatePermissionCommand;
 use App\Contracts\PermissionRepository;
 use Spatie\Permission\Models\Permission;
 
-final class CreatePermissionHandler
+final readonly class CreatePermissionHandler
 {
     public function __construct(
-        private readonly PermissionRepository $permissions,
-    ) {}
+        private PermissionRepository $permissions,
+    ) {
+    }
 
     public function handle(CreatePermissionCommand $command): Permission
     {

@@ -5,20 +5,20 @@ declare(strict_types=1);
 namespace App\Repositories;
 
 use App\Contracts\UserRepository;
-use App\DTO\OtpDestination;
-use App\DTO\RegisterUserData;
+use App\DTO\OtpDestinationDTO;
+use App\DTO\RegisterUserDataDTO;
 use App\Enums\OtpChannel;
 use App\Models\User;
 
 final class EloquentUserRepository implements UserRepository
 {
-    public function create(RegisterUserData $data): User
+    public function create(RegisterUserDataDTO $data): User
     {
         return User::query()->create([
-            'name' => $data->name,
+            'name'     => $data->name,
             'username' => $data->username,
-            'email' => $data->email,
-            'phone' => $data->phone,
+            'email'    => $data->email,
+            'phone'    => $data->phone,
             'password' => $data->password,
         ]);
     }
@@ -33,15 +33,15 @@ final class EloquentUserRepository implements UserRepository
         return User::query()->role($role, 'api')->where('is_active', true)->count();
     }
 
-    public function findByDestination(OtpDestination $destination): ?User
+    public function findByDestination(OtpDestinationDTO $destination): ?User
     {
         return User::query()->where($destination->channel->userColumn(), $destination->value)->first();
     }
 
-    public function createFromDestination(OtpDestination $destination): User
+    public function createFromDestination(OtpDestinationDTO $destination): User
     {
         $user = new User([
-            'name' => $destination->value,
+            'name'                              => $destination->value,
             $destination->channel->userColumn() => $destination->value,
             // Set explicitly: a database default would not be visible on the returned model.
             'is_active' => true,
@@ -61,7 +61,7 @@ final class EloquentUserRepository implements UserRepository
         $changes = ['password' => null, $channel->verifiedColumn() => now()];
 
         foreach (OtpChannel::cases() as $other) {
-            if ($other !== $channel && ! $this->isVerified($user, $other)) {
+            if ($other !== $channel && !$this->isVerified($user, $other)) {
                 $changes[$other->userColumn()] = null;
             }
         }

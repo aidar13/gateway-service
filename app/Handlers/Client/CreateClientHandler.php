@@ -6,15 +6,16 @@ namespace App\Handlers\Client;
 
 use App\Commands\Client\CreateClientCommand;
 use App\Contracts\OAuthClientRepository;
-use App\DTO\NewClient;
+use App\DTO\NewClientDTO;
 
-final class CreateClientHandler
+final readonly class CreateClientHandler
 {
     public function __construct(
-        private readonly OAuthClientRepository $clients,
-    ) {}
+        private OAuthClientRepository $clients,
+    ) {
+    }
 
-    public function handle(CreateClientCommand $command): NewClient
+    public function handle(CreateClientCommand $command): NewClientDTO
     {
         $created = $this->clients->createPasswordClient($command->name);
         $this->clients->syncScopes($created->client, $command->scopeIds);

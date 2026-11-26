@@ -23,7 +23,8 @@ final class ScopeController extends Controller
     public function __construct(
         private readonly ScopeRepository $scopes,
         private readonly CommandBus $bus,
-    ) {}
+    ) {
+    }
 
     #[OA\Get(
         path: '/api/admin/scopes',
@@ -61,7 +62,7 @@ final class ScopeController extends Controller
     public function store(StoreScopeRequest $request): JsonResponse
     {
         $scope = $this->bus->dispatch(new CreateScopeCommand(
-            (string) $request->validated('name'),
+            (string)$request->validated('name'),
             $request->filled('description') ? $request->string('description')->toString() : null,
             $request->boolean('is_active', true),
         ));

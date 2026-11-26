@@ -17,5 +17,6 @@ final readonly class VerifyOtpCommand implements Command
     public function __construct(
         public string $hash,
         public string $code,
-    ) {}
+    ) {
+    }
 }

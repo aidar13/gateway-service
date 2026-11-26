@@ -31,12 +31,12 @@ class OtpCode extends Model
     protected function casts(): array
     {
         return [
-            'channel' => OtpChannel::class,
-            'attempts' => 'integer',
-            'resends' => 'integer',
-            'expires_at' => 'immutable_datetime',
+            'channel'      => OtpChannel::class,
+            'attempts'     => 'integer',
+            'resends'      => 'integer',
+            'expires_at'   => 'immutable_datetime',
             'last_sent_at' => 'immutable_datetime',
-            'consumed_at' => 'immutable_datetime',
+            'consumed_at'  => 'immutable_datetime',
         ];
     }
 

@@ -9,11 +9,12 @@ use App\Contracts\RoleRepository;
 use App\Enums\SystemRole;
 use App\Exceptions\ProtectedResource;
 
-final class DeleteRoleHandler
+final readonly class DeleteRoleHandler
 {
     public function __construct(
-        private readonly RoleRepository $roles,
-    ) {}
+        private RoleRepository $roles,
+    ) {
+    }
 
     public function handle(DeleteRoleCommand $command): void
     {

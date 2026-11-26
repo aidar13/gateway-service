@@ -13,5 +13,6 @@ final readonly class RenamePermissionCommand implements Command
     public function __construct(
         public int $permissionId,
         public string $name,
-    ) {}
+    ) {
+    }
 }

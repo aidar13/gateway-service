@@ -12,12 +12,12 @@ final class AccessManagementTest extends ApiTestCase
 {
     private function roleId(string $name): int
     {
-        return (int) Role::findByName($name, 'api')->getKey();
+        return (int)Role::findByName($name, 'api')->getKey();
     }
 
     private function permissionId(string $name): int
     {
-        return (int) Permission::findByName($name, 'api')->getKey();
+        return (int)Permission::findByName($name, 'api')->getKey();
     }
 
     public function test_role_lifecycle_with_permissions(): void
@@ -25,7 +25,7 @@ final class AccessManagementTest extends ApiTestCase
         $this->asAdmin();
         $this->postJson('/api/admin/permissions', ['name' => 'reports.view'])->assertCreated()->assertJsonPath('data.is_system', false);
 
-        $id = (int) $this->postJson('/api/admin/roles', ['name' => 'manager', 'permissions' => ['reports.view']])
+        $id = (int)$this->postJson('/api/admin/roles', ['name' => 'manager', 'permissions' => ['reports.view']])
             ->assertCreated()
             ->assertJsonPath('data.permissions', ['reports.view'])
             ->json('data.id');
@@ -64,7 +64,7 @@ final class AccessManagementTest extends ApiTestCase
         $this->deleteJson("/api/admin/roles/{$admin}")->assertStatus(409);
         $this->putJson("/api/admin/roles/{$admin}", ['name' => 'root'])->assertStatus(409);
         $this->putJson("/api/admin/roles/{$admin}", ['permissions' => ['services.view']])->assertStatus(409);
-        $this->deleteJson('/api/admin/roles/'.$this->roleId('client'))->assertStatus(409);
+        $this->deleteJson('/api/admin/roles/' . $this->roleId('client'))->assertStatus(409);
 
         $permission = $this->permissionId('roles.view');
         $this->deleteJson("/api/admin/permissions/{$permission}")->assertStatus(409);
@@ -74,7 +74,7 @@ final class AccessManagementTest extends ApiTestCase
     public function test_custom_permission_can_be_renamed_and_deleted(): void
     {
         $this->asAdmin();
-        $id = (int) $this->postJson('/api/admin/permissions', ['name' => 'reports.view'])->json('data.id');
+        $id = (int)$this->postJson('/api/admin/permissions', ['name' => 'reports.view'])->json('data.id');
 
         $this->putJson("/api/admin/permissions/{$id}", ['name' => 'reports.read'])->assertOk()->assertJsonPath('data.name', 'reports.read');
         $this->deleteJson("/api/admin/permissions/{$id}")->assertNoContent();

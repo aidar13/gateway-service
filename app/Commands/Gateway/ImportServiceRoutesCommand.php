@@ -16,5 +16,6 @@ final readonly class ImportServiceRoutesCommand implements Command
 {
     public function __construct(
         public Microservice $service,
-    ) {}
+    ) {
+    }
 }

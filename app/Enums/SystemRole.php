@@ -7,6 +7,6 @@ namespace App\Enums;
 /** Roles the platform itself relies on. */
 enum SystemRole: string
 {
-    case Admin = 'admin';
+    case Admin  = 'admin';
     case Client = 'client';
 }

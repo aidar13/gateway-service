@@ -15,5 +15,6 @@ final readonly class DeleteServiceCommand implements Command
 {
     public function __construct(
         public int $serviceId,
-    ) {}
+    ) {
+    }
 }

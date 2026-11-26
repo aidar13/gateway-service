@@ -12,5 +12,6 @@ final readonly class LogoutCommand implements Command
 {
     public function __construct(
         public User $user,
-    ) {}
+    ) {
+    }
 }

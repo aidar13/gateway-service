@@ -8,7 +8,7 @@ namespace App\Gateway;
 final class RouteMatcher
 {
     /**
-     * @param  iterable<RouteDefinition>  $routes
+     * @param iterable<RouteDefinition> $routes
      */
     public function match(iterable $routes, string $method, string $path): ?RouteDefinition
     {
@@ -19,7 +19,7 @@ final class RouteMatcher
             return null;
         }
 
-        $best = null;
+        $best      = null;
         $bestScore = -1;
 
         foreach ($routes as $route) {
@@ -38,8 +38,8 @@ final class RouteMatcher
     }
 
     /**
-     * @param  list<string>  $template
-     * @param  list<string>  $segments
+     * @param list<string> $template
+     * @param list<string> $segments
      * @return int|null number of literal segments matched (so `/orders/quote` beats `/orders/{id}`)
      */
     private function score(array $template, array $segments): ?int

@@ -24,12 +24,12 @@ final class ServiceResource extends JsonResource
     public function toArray(Request $request): array
     {
         return [
-            'id' => $this->id,
-            'name' => $this->name,
-            'base_url' => $this->base_url,
+            'id'           => $this->id,
+            'name'         => $this->name,
+            'base_url'     => $this->base_url,
             'openapi_path' => $this->openapi_path,
-            'is_active' => $this->is_active,
-            'routes' => ServiceRouteResource::collection($this->whenLoaded('routes')),
+            'is_active'    => $this->is_active,
+            'routes'       => ServiceRouteResource::collection($this->whenLoaded('routes')),
         ];
     }
 }

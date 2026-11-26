@@ -19,7 +19,7 @@ final class ProxyController extends Controller
 
         return $bus->dispatch(new ProxyRequestCommand(
             $service,
-            '/'.ltrim($path, '/'),
+            '/' . ltrim($path, '/'),
             $request,
             $user?->is_active ? $user : null,
         ));

@@ -17,21 +17,22 @@ use App\Models\User;
 use Symfony\Component\HttpFoundation\Response;
 
 /** Resolve service → match route → authorise (user, scope, permission) → forward. Unregistered routes are never forwarded. */
-final class ProxyRequestHandler
+final readonly class ProxyRequestHandler
 {
     public function __construct(
-        private readonly ServiceRepository $services,
-        private readonly RouteMatcher $matcher,
-        private readonly UpstreamClient $upstream,
-        private readonly ClientScopeGate $scopes,
-    ) {}
+        private ServiceRepository $services,
+        private RouteMatcher $matcher,
+        private UpstreamClient $upstream,
+        private ClientScopeGate $scopes,
+    ) {
+    }
 
     public function handle(ProxyRequestCommand $command): Response
     {
         $serviceName = $command->serviceName;
-        $path = $command->path;
-        $request = $command->request;
-        $user = $command->user;
+        $path        = $command->path;
+        $request     = $command->request;
+        $user        = $command->user;
 
         $service = $this->services->findActiveByName($serviceName)
             ?? throw ResourceNotFound::make('Service');
@@ -47,7 +48,7 @@ final class ProxyRequestHandler
     /** Public routes are open; others need a user, an application scope and, if declared, a permission. */
     private function authorise(RouteDefinition $route, Microservice $service, ?User $user): void
     {
-        if (! $route->requiresAuth && $route->permission === null) {
+        if (!$route->requiresAuth && $route->permission === null) {
             return;
         }
 
@@ -55,11 +56,11 @@ final class ProxyRequestHandler
             throw ProxyDenied::unauthenticated();
         }
 
-        if (! $this->scopes->allows($user, $service, $route)) {
+        if (!$this->scopes->allows($user, $service, $route)) {
             throw ProxyDenied::outOfScope();
         }
 
-        if ($route->permission !== null && ! $user->can($route->permission)) {
+        if ($route->permission !== null && !$user->can($route->permission)) {
             throw ProxyDenied::forbidden($route->permission);
         }
     }

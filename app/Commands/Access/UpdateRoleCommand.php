@@ -19,5 +19,6 @@ final readonly class UpdateRoleCommand implements Command
         public int $roleId,
         public ?string $name,
         public ?array $permissions,
-    ) {}
+    ) {
+    }
 }

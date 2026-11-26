@@ -11,15 +11,16 @@ use App\Enums\SystemRole;
 use App\Exceptions\ProtectedResource;
 use Spatie\Permission\Models\Role;
 
-final class UpdateRoleHandler
+final readonly class UpdateRoleHandler
 {
     public function __construct(
-        private readonly RoleRepository $roles,
-    ) {}
+        private RoleRepository $roles,
+    ) {
+    }
 
     public function handle(UpdateRoleCommand $command): Role
     {
-        $role = $this->roles->get($command->roleId);
+        $role   = $this->roles->get($command->roleId);
         $system = SystemRole::tryFrom($role->name);
 
         if ($system !== null && $command->name !== null && $command->name !== $role->name) {

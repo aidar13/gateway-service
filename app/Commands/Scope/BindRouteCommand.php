@@ -13,5 +13,6 @@ final readonly class BindRouteCommand implements Command
     public function __construct(
         public int $scopeId,
         public int $routeId,
-    ) {}
+    ) {
+    }
 }

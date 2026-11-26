@@ -79,11 +79,11 @@ final class EloquentScopeRepository implements ScopeRepository
     {
         return AccessScope::query()
             ->where('is_active', true)
-            ->when($requested !== [], fn (Builder $q) => $q->whereIn('name', $requested))
-            ->whereHas('clients', fn (Builder $q) => $q->whereKey($clientId))
-            ->where(fn (Builder $q) => $q
-                ->whereHas('services', fn (Builder $s) => $s->whereKey($serviceId))
-                ->orWhereHas('routes', fn (Builder $r) => $r->whereKey($routeId)))
+            ->when($requested !== [], fn(Builder $q) => $q->whereIn('name', $requested))
+            ->whereHas('clients', fn(Builder $q) => $q->whereKey($clientId))
+            ->where(fn(Builder $q) => $q
+                ->whereHas('services', fn(Builder $s) => $s->whereKey($serviceId))
+                ->orWhereHas('routes', fn(Builder $r) => $r->whereKey($routeId)))
             ->exists();
     }
 }

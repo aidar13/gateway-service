@@ -13,9 +13,9 @@ final class StoreScopeRequest extends FormRequest
     {
         return [
             // Scope names travel space-separated in OAuth requests.
-            'name' => ['required', 'string', 'regex:/^[a-z][a-z0-9:._-]{1,49}$/', 'unique:access_scopes,name'],
+            'name'        => ['required', 'string', 'regex:/^[a-z][a-z0-9:._-]{1,49}$/', 'unique:access_scopes,name'],
             'description' => ['nullable', 'string', 'max:255'],
-            'is_active' => ['sometimes', 'boolean'],
+            'is_active'   => ['sometimes', 'boolean'],
         ];
     }
 }

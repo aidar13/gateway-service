@@ -20,8 +20,8 @@ final class StoreClientRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name' => ['required', 'string', 'max:100'],
-            'scope_ids' => ['sometimes', 'array'],
+            'name'        => ['required', 'string', 'max:100'],
+            'scope_ids'   => ['sometimes', 'array'],
             'scope_ids.*' => ['integer', 'distinct', 'exists:access_scopes,id'],
         ];
     }
@@ -29,6 +29,6 @@ final class StoreClientRequest extends FormRequest
     /** @return list<int> */
     public function scopeIds(): array
     {
-        return array_values(array_map(intval(...), (array) $this->validated('scope_ids', [])));
+        return array_values(array_map(intval(...), (array)$this->validated('scope_ids', [])));
     }
 }

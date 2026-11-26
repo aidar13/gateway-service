@@ -41,7 +41,9 @@ use OpenApi\Attributes as OA;
 )]
 final class AuthController extends Controller
 {
-    public function __construct(private readonly CommandBus $bus) {}
+    public function __construct(private readonly CommandBus $bus)
+    {
+    }
 
     #[OA\Post(
         path: '/api/auth/register',

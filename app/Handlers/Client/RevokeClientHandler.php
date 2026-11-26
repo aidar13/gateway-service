@@ -8,11 +8,12 @@ use App\Commands\Client\RevokeClientCommand;
 use App\Contracts\OAuthClientRepository;
 use App\Exceptions\ProtectedResource;
 
-final class RevokeClientHandler
+final readonly class RevokeClientHandler
 {
     public function __construct(
-        private readonly OAuthClientRepository $clients,
-    ) {}
+        private OAuthClientRepository $clients,
+    ) {
+    }
 
     public function handle(RevokeClientCommand $command): void
     {

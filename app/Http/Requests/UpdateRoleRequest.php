@@ -17,7 +17,7 @@ final class UpdateRoleRequest extends FormRequest
                 'sometimes', 'string', 'regex:/^[a-z][a-z0-9_-]{1,49}$/',
                 Rule::unique('roles', 'name')->where('guard_name', 'api')->ignore($this->route('id')),
             ],
-            'permissions' => ['sometimes', 'array'],
+            'permissions'   => ['sometimes', 'array'],
             'permissions.*' => ['string', 'distinct', Rule::exists('permissions', 'name')->where('guard_name', 'api')],
         ];
     }

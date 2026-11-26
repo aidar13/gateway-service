@@ -52,11 +52,11 @@ final class AdminPermissionsTest extends ApiTestCase
 
     public function test_every_endpoint_opens_with_its_own_permission_only(): void
     {
-        $user = User::factory()->create();
+        $user  = User::factory()->create();
         $token = $this->accessTokenFor($user);
 
         foreach (self::endpoints() as [$method, $uri, $permission]) {
-            $url = '/api/admin/'.preg_replace('/\{\w+\}/', '999999', $uri);
+            $url    = '/api/admin/' . preg_replace('/\{\w+\}/', '999999', $uri);
             $others = array_values(array_diff(P::values(), [$permission->value]));
 
             $user->syncPermissions($others);
@@ -73,32 +73,32 @@ final class AdminPermissionsTest extends ApiTestCase
     {
         $admin = array_filter(
             Route::getRoutes()->getRoutes(),
-            static fn (RegisteredRoute $route): bool => str_starts_with($route->uri(), 'api/admin/'),
+            static fn(RegisteredRoute $route): bool => str_starts_with($route->uri(), 'api/admin/'),
         );
-        $listed = array_map(static fn (array $row): string => "{$row[0]} api/admin/{$row[1]}", self::endpoints());
+        $listed = array_map(static fn(array $row): string => "{$row[0]} api/admin/{$row[1]}", self::endpoints());
 
         foreach ($admin as $route) {
             $guards = array_filter(
                 $route->gatherMiddleware(),
-                static fn (mixed $name): bool => is_string($name) && str_starts_with($name, 'permission:'),
+                static fn(mixed $name): bool => is_string($name) && str_starts_with($name, 'permission:'),
             );
             $this->assertCount(1, $guards, $route->uri());
             $this->assertNotEmpty(array_filter(
                 $route->methods(),
-                static fn (string $method): bool => in_array("{$method} {$route->uri()}", $listed, true),
-            ), implode('|', $route->methods()).' '.$route->uri());
+                static fn(string $method): bool => in_array("{$method} {$route->uri()}", $listed, true),
+            ), implode('|', $route->methods()) . ' ' . $route->uri());
         }
 
-        $used = array_unique(array_map(static fn (array $row): string => $row[2]->value, self::endpoints()));
+        $used = array_unique(array_map(static fn(array $row): string => $row[2]->value, self::endpoints()));
         $this->assertEqualsCanonicalizing(P::values(), $used);
     }
 
     public function test_creating_a_client_with_scopes_needs_the_right_to_assign_them(): void
     {
         $scope = $this->grantScope('web');
-        $user = User::factory()->create();
+        $user  = User::factory()->create();
         $user->givePermissionTo(P::ClientsCreate->value);
-        $token = $this->accessTokenFor($user);
+        $token   = $this->accessTokenFor($user);
         $payload = ['name' => 'mobile', 'scope_ids' => [$scope->id]];
 
         $this->freshAuth($token)->postJson('/api/admin/clients', $payload)->assertForbidden();

@@ -16,7 +16,7 @@ abstract class TestCase extends BaseTestCase
     /** Creates throw-away signing keys, roles and an OAuth client. */
     protected function setUpAuth(): Client
     {
-        if (! file_exists(Passport::keyPath('oauth-private.key'))) {
+        if (!file_exists(Passport::keyPath('oauth-private.key'))) {
             Artisan::call('passport:keys', ['--force' => true]);
         }
 

@@ -10,13 +10,14 @@ use App\Contracts\ServiceRepository;
 use App\Gateway\OpenApiParser;
 
 /** Synchronises the route registry with the service's own OpenAPI document. */
-final class ImportServiceRoutesHandler
+final readonly class ImportServiceRoutesHandler
 {
     public function __construct(
-        private readonly OpenApiFetcher $fetcher,
-        private readonly OpenApiParser $parser,
-        private readonly ServiceRepository $services,
-    ) {}
+        private OpenApiFetcher $fetcher,
+        private OpenApiParser $parser,
+        private ServiceRepository $services,
+    ) {
+    }
 
     /** @return int number of routes now registered */
     public function handle(ImportServiceRoutesCommand $command): int

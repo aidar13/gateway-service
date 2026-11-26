@@ -26,7 +26,8 @@ final class ClientController extends Controller
     public function __construct(
         private readonly OAuthClientRepository $clients,
         private readonly CommandBus $bus,
-    ) {}
+    ) {
+    }
 
     #[OA\Get(
         path: '/api/admin/clients',
@@ -63,7 +64,7 @@ final class ClientController extends Controller
     )]
     public function store(StoreClientRequest $request): JsonResponse
     {
-        $created = $this->bus->dispatch(new CreateClientCommand((string) $request->validated('name'), $request->scopeIds()));
+        $created = $this->bus->dispatch(new CreateClientCommand((string)$request->validated('name'), $request->scopeIds()));
 
         return (new ClientResource($created->client))
             ->additional(['secret' => $created->plainSecret])
@@ -96,10 +97,10 @@ final class ClientController extends Controller
     public function destroy(int $id, Request $request): Response
     {
         /** @var User $user */
-        $user = $request->user();
+        $user  = $request->user();
         $token = $user->token();
 
-        $this->bus->dispatch(new RevokeClientCommand($id, $token instanceof Token ? (int) $token->client_id : null));
+        $this->bus->dispatch(new RevokeClientCommand($id, $token instanceof Token ? (int)$token->client_id : null));
 
         return response()->noContent();
     }

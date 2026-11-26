@@ -12,5 +12,6 @@ final readonly class ResendOtpCommand implements Command
 {
     public function __construct(
         public string $hash,
-    ) {}
+    ) {
+    }
 }

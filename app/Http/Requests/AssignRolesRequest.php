@@ -13,7 +13,7 @@ final class AssignRolesRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'roles' => ['present', 'array'],
+            'roles'   => ['present', 'array'],
             'roles.*' => ['string', Rule::exists('roles', 'name')->where('guard_name', 'api')],
         ];
     }
@@ -22,7 +22,7 @@ final class AssignRolesRequest extends FormRequest
     public function roles(): array
     {
         /** @var list<string> $roles */
-        $roles = array_values((array) $this->validated('roles'));
+        $roles = array_values((array)$this->validated('roles'));
 
         return $roles;
     }

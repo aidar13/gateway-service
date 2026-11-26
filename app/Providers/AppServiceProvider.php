@@ -59,13 +59,13 @@ final class AppServiceProvider extends ServiceProvider
         $this->app->bind(OAuthClientRepository::class, PassportClientRepository::class);
         $this->app->bind(OpenApiFetcher::class, HttpOpenApiFetcher::class);
 
-        $this->app->bind(CodeGenerator::class, fn () => new RandomCodeGenerator((int) config('gateway.otp.length')));
+        $this->app->bind(CodeGenerator::class, fn() => new RandomCodeGenerator((int)config('gateway.otp.length')));
 
-        $this->app->bind(OtpSettings::class, fn () => new OtpSettings(
-            (int) config('gateway.otp.ttl_minutes'),
-            (int) config('gateway.otp.max_attempts'),
-            (int) config('gateway.otp.resend_cooldown_seconds'),
-            (int) config('gateway.otp.max_resends'),
+        $this->app->bind(OtpSettings::class, fn() => new OtpSettings(
+            (int)config('gateway.otp.ttl_minutes'),
+            (int)config('gateway.otp.max_attempts'),
+            (int)config('gateway.otp.resend_cooldown_seconds'),
+            (int)config('gateway.otp.max_resends'),
         ));
 
         $this->app->bind(UpstreamClient::class, function (Application $app): UpstreamClient {
@@ -74,21 +74,21 @@ final class AppServiceProvider extends ServiceProvider
 
             return new HttpUpstreamClient(
                 $app->make(Http::class),
-                (string) config('gateway.internal_api_key'),
+                (string)config('gateway.internal_api_key'),
                 $headers,
-                (int) config('gateway.proxy.timeout'),
+                (int)config('gateway.proxy.timeout'),
             );
         });
 
         $this->app->bind(NotificationClient::class, function (Application $app): NotificationClient {
-            $url = (string) config('gateway.notifications.url');
+            $url = (string)config('gateway.notifications.url');
 
             return $url === ''
                 ? new LogNotificationClient($app->make(LoggerInterface::class), $app->environment('local', 'testing'))
                 : new HttpNotificationClient(
                     $app->make(Http::class),
                     $url,
-                    (string) config('gateway.notifications.api_key'),
+                    (string)config('gateway.notifications.api_key'),
                 );
         });
     }
@@ -97,7 +97,7 @@ final class AppServiceProvider extends ServiceProvider
     {
         Passport::enablePasswordGrant();
         Passport::useClientModel(OAuthClient::class);
-        $accessTtl = new DateInterval('PT1H');
+        $accessTtl  = new DateInterval('PT1H');
         $refreshTtl = new DateInterval('P30D');
         Passport::tokensExpireIn($accessTtl);
         Passport::refreshTokensExpireIn($refreshTtl);
@@ -116,9 +116,9 @@ final class AppServiceProvider extends ServiceProvider
         });
 
         // Brute-force protection for everything that checks or sends a secret.
-        RateLimiter::for('auth', static fn (Request $request) => Limit::perMinute(10)->by((string) $request->ip()));
-        RateLimiter::for('gateway', static fn (Request $request) => Limit::perMinute(120)->by(
-            (string) ($request->user('api')?->getAuthIdentifier() ?? $request->ip()),
+        RateLimiter::for('auth', static fn(Request $request) => Limit::perMinute(10)->by((string)$request->ip()));
+        RateLimiter::for('gateway', static fn(Request $request) => Limit::perMinute(120)->by(
+            (string)($request->user('api')?->getAuthIdentifier() ?? $request->ip()),
         ));
     }
 }

@@ -14,5 +14,6 @@ final readonly class UpdateServiceCommand implements Command
     public function __construct(
         public int $serviceId,
         public array $changes,
-    ) {}
+    ) {
+    }
 }

@@ -12,9 +12,9 @@ final class UpdateServiceRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'base_url' => ['sometimes', 'url:http,https', 'max:255'],
+            'base_url'     => ['sometimes', 'url:http,https', 'max:255'],
             'openapi_path' => ['sometimes', 'string', 'starts_with:/', 'max:255'],
-            'is_active' => ['sometimes', 'boolean'],
+            'is_active'    => ['sometimes', 'boolean'],
         ];
     }
 

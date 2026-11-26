@@ -29,7 +29,7 @@ final class SpatieRoleRepository implements RoleRepository
         $role = Role::create(['name' => $name, 'guard_name' => self::GUARD]);
         $role->syncPermissions($permissions);
 
-        return $this->get((int) $role->getKey());
+        return $this->get((int)$role->getKey());
     }
 
     public function update(Role $role, ?string $name, ?array $permissions): Role
@@ -42,7 +42,7 @@ final class SpatieRoleRepository implements RoleRepository
             $role->syncPermissions($permissions);
         }
 
-        return $this->get((int) $role->getKey());
+        return $this->get((int)$role->getKey());
     }
 
     public function delete(Role $role): void

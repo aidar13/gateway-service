@@ -11,5 +11,6 @@ final readonly class DeleteScopeCommand implements Command
 {
     public function __construct(
         public int $scopeId,
-    ) {}
+    ) {
+    }
 }

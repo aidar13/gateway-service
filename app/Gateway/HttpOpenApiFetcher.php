@@ -11,9 +11,11 @@ use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\Factory as Http;
 use Illuminate\Http\Client\RequestException;
 
-final class HttpOpenApiFetcher implements OpenApiFetcher
+final readonly class HttpOpenApiFetcher implements OpenApiFetcher
 {
-    public function __construct(private readonly Http $http) {}
+    public function __construct(private Http $http)
+    {
+    }
 
     public function fetch(Microservice $service): array
     {
@@ -21,7 +23,7 @@ final class HttpOpenApiFetcher implements OpenApiFetcher
             $document = $this->http
                 ->timeout(10)
                 ->acceptJson()
-                ->get(rtrim($service->base_url, '/').'/'.ltrim($service->openapi_path, '/'))
+                ->get(rtrim($service->base_url, '/') . '/' . ltrim($service->openapi_path, '/'))
                 ->throw()
                 ->json();
         } catch (ConnectionException|RequestException $e) {

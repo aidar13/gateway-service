@@ -72,7 +72,7 @@ Safety rules: system roles and permissions cannot be renamed or deleted, the `ad
 
 ```
 Controller → FormRequest → Command → Handler → Contract → Repository / adapter → Model
-Auth:     IssueOtpHandler / ResendOtpHandler ─ event OtpIssued → listener → encrypted job DeliverOtp → NotificationClient
+Auth:     IssueOtpHandler / ResendOtpHandler ─ event OtpIssuedEvent → listener → encrypted job DeliverOtp → NotificationClient
           OtpGrant (/oauth/token) → VerifyOtpCommand
 Gateway:  ProxyController → ProxyRequestHandler → ServiceRepository → RouteMatcher → ClientScopeGate + permission → UpstreamClient
 Admin:    controllers → commands (Access, Gateway, Scope, Client) → handlers → repository contracts
@@ -84,7 +84,7 @@ Admin:    controllers → commands (Access, Gateway, Scope, Client) → handlers
 | SRP | matching, parsing, forwarding and authorisation are separate classes; one command and handler per use case |
 | OCP | a new sign-in method = a new OAuth grant class; a new delivery transport = a new `NotificationClient` |
 | DIP | handlers depend on contracts bound in service providers |
-| DRY | one token endpoint for every sign-in method; one `OtpIssued` path for first send and resend |
+| DRY | one token endpoint for every sign-in method; one `OtpIssuedEvent` path for first send and resend |
 | KISS | one catch-all proxy route and a ~60-line matcher instead of generating framework routes from the database |
 
 ## Commands and handlers
@@ -176,6 +176,6 @@ API-шлюз небольшой микросервисной платформы 
 
 **Шлюз:** реестр микросервисов; маршруты импортируются из OpenAPI каждого сервиса (`x-unauthenticated`, `x-permission`), по умолчанию всё закрыто; проксируются только зарегистрированные маршруты; личность передаётся заголовками `X-User*` и внутренним ключом, заголовки клиента копируются по белому списку (подделать личность нельзя), токен пользователя вниз не уходит; тело передаётся без изменений (подпись вебхука сохраняется).
 
-**Архитектура:** Controller → FormRequest → Command → Handler → контракт → репозиторий/адаптер. Event `OtpIssued` → listener → зашифрованный Job. SOLID: отдельные классы на сопоставление, разбор, проксирование (SRP), новый способ входа — новый grant (OCP), зависимости на интерфейсы (DIP).
+**Архитектура:** Controller → FormRequest → Command → Handler → контракт → репозиторий/адаптер. Event `OtpIssuedEvent` → listener → зашифрованный Job. SOLID: отдельные классы на сопоставление, разбор, проксирование (SRP), новый способ входа — новый grant (OCP), зависимости на интерфейсы (DIP).
 
 **Запуск всей платформы** (три репозитория рядом): `./scripts/platform-up.sh`, затем `./scripts/smoke.sh` — сквозной сценарий «OTP → заказ → оплата → письма». Проверки: `composer test`, `composer analyse`, `composer lint`.

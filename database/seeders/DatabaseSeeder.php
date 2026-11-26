@@ -19,7 +19,7 @@ final class DatabaseSeeder extends Seeder
 
         $admin = User::query()->firstOrCreate(
             ['username' => 'admin'],
-            ['name' => 'Administrator', 'email' => 'admin@gateway.example', 'password' => (string) config('gateway.seed.admin_password')],
+            ['name' => 'Administrator', 'email' => 'admin@gateway.example', 'password' => (string)config('gateway.seed.admin_password')],
         );
         $admin->syncRoles(['admin']);
 
@@ -33,7 +33,7 @@ final class DatabaseSeeder extends Seeder
         $client = Client::query()->where('password_client', true)->first();
         if ($client === null) {
             $client = $clients->createPasswordGrantClient(null, 'web', 'http://localhost');
-            $client->forceFill(['secret' => (string) config('gateway.seed.client_secret')])->save();
+            $client->forceFill(['secret' => (string)config('gateway.seed.client_secret')])->save();
         }
 
         // Default scope: the first-party application may use every seeded service.

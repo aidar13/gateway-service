@@ -43,7 +43,7 @@ interface ScopeRepository
     /**
      * Is there an active scope of this client, among the requested ones, that covers the route?
      *
-     * @param  list<string>  $requested  scopes the token was narrowed to; empty = all client scopes
+     * @param list<string> $requested scopes the token was narrowed to; empty = all client scopes
      */
     public function grants(int $clientId, array $requested, int $serviceId, int $routeId): bool;
 }

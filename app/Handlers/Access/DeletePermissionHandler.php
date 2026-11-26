@@ -9,11 +9,12 @@ use App\Contracts\PermissionRepository;
 use App\Enums\SystemPermission;
 use App\Exceptions\ProtectedResource;
 
-final class DeletePermissionHandler
+final readonly class DeletePermissionHandler
 {
     public function __construct(
-        private readonly PermissionRepository $permissions,
-    ) {}
+        private PermissionRepository $permissions,
+    ) {
+    }
 
     public function handle(DeletePermissionCommand $command): void
     {

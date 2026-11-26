@@ -12,5 +12,6 @@ final readonly class CreatePermissionCommand implements Command
 {
     public function __construct(
         public string $name,
-    ) {}
+    ) {
+    }
 }

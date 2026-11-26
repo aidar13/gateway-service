@@ -8,8 +8,8 @@ use App\Auth\OtpSettings;
 use App\Commands\Auth\ResendOtpCommand;
 use App\Contracts\CodeGenerator;
 use App\Contracts\OtpRepository;
-use App\DTO\OtpDestination;
-use App\Events\OtpIssued;
+use App\DTO\OtpDestinationDTO;
+use App\Events\OtpIssuedEvent;
 use App\Exceptions\OtpNotFound;
 use App\Exceptions\OtpThrottled;
 use App\Models\OtpCode;
@@ -17,15 +17,16 @@ use Carbon\CarbonImmutable;
 use Illuminate\Contracts\Events\Dispatcher;
 use Illuminate\Contracts\Hashing\Hasher;
 
-final class ResendOtpHandler
+final readonly class ResendOtpHandler
 {
     public function __construct(
-        private readonly OtpRepository $codes,
-        private readonly CodeGenerator $generator,
-        private readonly Hasher $hasher,
-        private readonly Dispatcher $events,
-        private readonly OtpSettings $settings,
-    ) {}
+        private OtpRepository $codes,
+        private CodeGenerator $generator,
+        private Hasher $hasher,
+        private Dispatcher $events,
+        private OtpSettings $settings,
+    ) {
+    }
 
     public function handle(ResendOtpCommand $command): OtpCode
     {
@@ -44,7 +45,7 @@ final class ResendOtpHandler
 
         $availableAt = $otp->last_sent_at->addSeconds($this->settings->resendCooldownSeconds);
         if ($availableAt->isFuture()) {
-            throw OtpThrottled::cooldown((int) ceil(CarbonImmutable::now()->diffInSeconds($availableAt)));
+            throw OtpThrottled::cooldown((int)ceil(CarbonImmutable::now()->diffInSeconds($availableAt)));
         }
 
         $code = $this->generator->generate();
@@ -54,8 +55,8 @@ final class ResendOtpHandler
             CarbonImmutable::now()->addMinutes($this->settings->ttlMinutes),
         );
 
-        $this->events->dispatch(new OtpIssued(
-            new OtpDestination($otp->channel, $otp->destination),
+        $this->events->dispatch(new OtpIssuedEvent(
+            new OtpDestinationDTO($otp->channel, $otp->destination),
             $code,
             $this->settings->ttlMinutes,
         ));

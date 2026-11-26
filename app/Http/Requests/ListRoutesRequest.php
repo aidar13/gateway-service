@@ -13,8 +13,8 @@ final class ListRoutesRequest extends FormRequest
     {
         return [
             'service_id' => ['sometimes', 'integer'],
-            'search' => ['sometimes', 'string', 'max:100'],
-            'per_page' => ['sometimes', 'integer', 'min:1', 'max:200'],
+            'search'     => ['sometimes', 'string', 'max:100'],
+            'per_page'   => ['sometimes', 'integer', 'min:1', 'max:200'],
         ];
     }
 

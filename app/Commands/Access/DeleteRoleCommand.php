@@ -11,5 +11,6 @@ final readonly class DeleteRoleCommand implements Command
 {
     public function __construct(
         public int $roleId,
-    ) {}
+    ) {
+    }
 }

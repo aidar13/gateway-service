@@ -13,8 +13,8 @@ final class UpdateScopeRequest extends FormRequest
     {
         return [
             'description' => ['sometimes', 'nullable', 'string', 'max:255'],
-            'is_active' => ['sometimes', 'boolean'],
-            'name' => ['prohibited'],
+            'is_active'   => ['sometimes', 'boolean'],
+            'name'        => ['prohibited'],
         ];
     }
 
